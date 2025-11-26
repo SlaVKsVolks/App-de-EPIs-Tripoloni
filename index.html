@@ -1,207 +1,455 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de EPI - Demo</title>
+    <title>Gestão de EPIs - Construtora Tripoloni</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0056b3">
+    <link rel="icon" href="logo-tripoloni.png" type="image/png">
     <style>
-        /* CSS - O Visual do App */
-        :root {
-            --primary-color: #0056b3; /* Azul padrão corporativo */
-            --bg-color: #f4f4f9;
-            --card-bg: #ffffff;
-            --text-color: #333;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
             margin: 0;
-            padding: 0;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             min-height: 100vh;
         }
 
-        /* Cabeçalho */
+        #app-container {
+            background: white;
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
         header {
-            background-color: var(--primary-color);
+            background-color: #0056b3;
             color: white;
-            padding: 1rem;
+            padding: 15px;
             text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         header h1 {
             margin: 0;
             font-size: 1.2rem;
-            font-weight: 500;
         }
 
-        /* Área de Conteúdo */
-        main {
+        .screen {
+            padding: 20px;
             flex: 1;
-            padding: 1rem;
-            max-width: 600px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
+            display: none;
+            /* Hidden by default */
+            flex-direction: column;
         }
 
-        /* Cartões (Box de formulário) */
-        .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            margin-bottom: 1rem;
+        /* Specific alignment for center-content screens */
+        #screen-construction,
+        #screen-login,
+        #screen-register {
+            justify-content: center;
+            /* Center vertically if flex-direction is column */
+            align-items: center;
         }
 
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 15px;
+            width: 100%;
         }
 
         label {
             display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            font-size: 0.9rem;
-            color: #555;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
         }
 
-        select, input {
+        input,
+        select,
+        textarea {
             width: 100%;
             padding: 12px;
             border: 1px solid #ddd;
             border-radius: 8px;
-            font-size: 1rem;
-            background-color: #fff;
-            box-sizing: border-box; /* Garante que padding não estoure a largura */
+            box-sizing: border-box;
+            font-size: 16px;
         }
 
-        /* Botão Principal */
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
+        textarea.modern-textarea {
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        button {
             width: 100%;
             padding: 15px;
+            background-color: #0056b3;
+            color: white;
+            border: none;
             border-radius: 8px;
-            font-size: 1rem;
-            font-weight: bold;
+            font-size: 16px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background-color 0.3s;
+            margin-top: 10px;
         }
 
-        .btn-primary:active {
+        button:hover {
             background-color: #004494;
         }
 
-        /* Botões de Navegação (Simulação) */
-        .nav-tabs {
+        button.secondary {
+            background-color: #6c757d;
+        }
+
+        button.secondary:hover {
+            background-color: #5a6268;
+        }
+
+        /* Dashboard Cards */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .dashboard-card {
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
             display: flex;
-            justify-content: space-around;
-            margin-bottom: 1rem;
-            background: #e0e0e0;
-            border-radius: 8px;
-            padding: 4px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            border-color: #0056b3;
+        }
+
+        .dashboard-card i {
+            font-size: 2rem;
+            color: #0056b3;
+            margin-bottom: 10px;
+            font-style: normal;
+        }
+
+        .dashboard-card h3 {
+            margin: 0;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        /* Success Message */
+        #register-success {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
         }
 
         .tab {
             flex: 1;
+            padding: 15px;
             text-align: center;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 0.9rem;
             cursor: pointer;
+            border-bottom: 3px solid transparent;
+            color: #666;
+            font-weight: 500;
         }
 
         .tab.active {
-            background: white;
-            font-weight: bold;
-            color: var(--primary-color);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-bottom-color: #0056b3;
+            color: #0056b3;
         }
 
-        /* Rodapé Fixo */
-        footer {
-            text-align: center;
-            padding: 1rem;
-            font-size: 0.8rem;
-            color: #888;
-            border-top: 1px solid #ddd;
+        /* Signature Pad */
+        #signature-pad {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            width: 100%;
+            height: 200px;
             background: #fff;
+            touch-action: none;
+            /* Prevent scrolling while signing */
+        }
+
+        /* Loading Overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0056b3;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #connection-status {
+            font-size: 0.8rem;
+            margin-right: 10px;
+        }
+
+        /* Install Button */
+        #btn-install-pwa {
+            display: none;
+            margin: 10px 20px;
+            background-color: #28a745;
         }
     </style>
 </head>
+
 <body>
 
-    <header>
-        <h1>Gestão de EPIs - Obra</h1>
-    </header>
+    <div id="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p>Carregando...</p>
+    </div>
 
-    <main>
-        <div class="nav-tabs">
-            <div class="tab active">Entrega</div>
-            <div class="tab">Devolução</div>
-            <div class="tab">Estoque</div>
+    <div id="app-container">
+        <header>
+            <div style="display: flex; align-items: center;">
+                <img src="./logo-tripoloni.png" alt="Logo"
+                    style="height: 30px; margin-right: 10px; background: white; padding: 2px; border-radius: 4px;">
+                <div>
+                    <h1>Gestão de EPIs</h1>
+                    <small style="font-size: 0.7rem;">Construtora Tripoloni</small>
+                </div>
+            </div>
+            <div id="connection-status">Verificando...</div>
+        </header>
+
+        <button id="btn-install-pwa">Instalar App</button>
+
+        <!-- SCREEN 1: CONSTRUCTION SELECTION -->
+        <div id="screen-construction" class="screen" style="display: flex;">
+            <div style="text-align: center; width: 100%;">
+                <h2>Selecione a Obra</h2>
+                <div id="construction-loading">
+                    <div class="spinner" style="margin: 0 auto;"></div>
+                    <p>Carregando obras...</p>
+                </div>
+                <div id="construction-select-container" style="display: none;">
+                    <select id="select-construction" style="margin-bottom: 20px;">
+                        <option value="">Selecione...</option>
+                    </select>
+                    <button id="btn-confirm-construction">Confirmar</button>
+                </div>
+            </div>
         </div>
 
-        <div class="card">
-            <h2 style="margin-top: 0; font-size: 1.1rem; color: #333;">Registrar Entrega</h2>
-            
-            <div class="form-group">
-                <label for="colaborador">Colaborador</label>
-                <select id="colaborador">
-                    <option value="">Selecione o colaborador...</option>
-                    <option>João Silva (Pedreiro)</option>
-                    <option>Maria Oliveira (Servente)</option>
-                    <option>Carlos Souza (Carpinteiro)</option>
-                </select>
+        <!-- SCREEN 2: LOGIN -->
+        <div id="screen-login" class="screen" style="display: none;">
+            <div style="text-align: center; width: 100%;">
+                <h2>Login</h2>
+                <p>Faça login com sua conta Google para continuar.</p>
+
+                <!-- Google Sign-In Button Container -->
+                <div id="g_id_onload"
+                    data-client_id="692838477828-813luva39tgr4j2fka1tnbzdn03e8bso.apps.googleusercontent.com"
+                    data-context="signin" data-ux_mode="popup" data-callback="handleCredentialResponse"
+                    data-auto_prompt="false">
+                </div>
+
+                <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline"
+                    data-text="signin_with" data-size="large" data-logo_alignment="left">
+                </div>
+
+                <p style="margin-top: 20px; font-size: 0.9rem;">
+                    Não tem acesso? <a href="#" id="link-request-access">Solicitar cadastro</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- SCREEN 2.5: REGISTRATION REQUEST -->
+        <div id="screen-register" class="screen" style="display: none;">
+            <div id="register-form-container" style="width: 100%;">
+                <h2 style="text-align: center;">Solicitar Acesso</h2>
+                <p style="text-align: center; color: #666; margin-bottom: 20px;">
+                    Preencha os dados abaixo para solicitar acesso ao sistema.
+                </p>
+
+                <div class="form-group">
+                    <label>Nome Completo</label>
+                    <input type="text" id="register-name" placeholder="Seu nome">
+                </div>
+
+                <div class="form-group">
+                    <label>Email (Google)</label>
+                    <input type="email" id="register-email" readonly
+                        style="background-color: #e9ecef; cursor: not-allowed;">
+                </div>
+
+                <div class="form-group">
+                    <label>Cargo / Função</label>
+                    <input type="text" id="register-position" placeholder="Ex: Técnico de Segurança">
+                </div>
+
+                <div class="form-group">
+                    <label>Motivo do Acesso</label>
+                    <textarea id="register-reason" class="modern-textarea" rows="4"
+                        placeholder="Descreva brevemente por que precisa de acesso..."></textarea>
+                </div>
+
+                <button id="btn-submit-registration">Enviar Solicitação</button>
+                <button id="btn-back-to-login" class="secondary">Voltar</button>
             </div>
 
-            <div class="form-group">
-                <label for="epi">EPI</label>
-                <select id="epi">
-                    <option value="">Selecione o EPI...</option>
-                    <option>Capacete de Segurança (Azul)</option>
-                    <option>Luva de Raspa</option>
-                    <option>Óculos de Proteção Incolor</option>
-                    <option>Bota de Segurança nº 40</option>
-                </select>
+            <div id="register-success" style="display: none;">
+                <div class="success-icon">✓</div>
+                <h3>Solicitação Enviada!</h3>
+                <p>Sua solicitação foi enviada para o administrador.</p>
+                <p>Você receberá um aviso assim que seu acesso for liberado.</p>
+                <button id="btn-success-back" onclick="location.reload()">Voltar ao Início</button>
             </div>
+        </div>
 
-            <div class="form-group">
-                <label for="qtd">Quantidade</label>
-                <input type="number" id="qtd" value="1" min="1">
-            </div>
+        <!-- SCREEN 3: DASHBOARD (NEW) -->
+        <div id="screen-dashboard" class="screen" style="display: none;">
+            <h2 style="text-align: center;">O que deseja fazer?</h2>
+            <p style="text-align: center; color: #666;">Selecione uma opção abaixo</p>
 
-            <div class="form-group">
-                <label>Assinatura (Simulação)</label>
-                <div style="border: 2px dashed #ccc; height: 80px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999; background: #fafafa;">
-                    Área de Assinatura Digital
+            <div class="dashboard-grid">
+                <div class="dashboard-card" id="card-delivery">
+                    <i>📦</i>
+                    <h3>Registrar Entrega</h3>
+                </div>
+                <div class="dashboard-card" id="card-return">
+                    <i>↩️</i>
+                    <h3>Registrar Devolução</h3>
+                </div>
+                <div class="dashboard-card" id="card-stock">
+                    <i>📋</i>
+                    <h3>Ver Estoque</h3>
                 </div>
             </div>
 
-            <button class="btn-primary" onclick="alert('Isso é apenas uma demonstração visual!\nO backend será conectado em breve.')">
-                CONFIRMAR ENTREGA
-            </button>
+            <button id="btn-logout" class="secondary" style="margin-top: auto;">Sair / Trocar Obra</button>
         </div>
 
-        <div class="card" style="text-align: center; font-size: 0.9rem; color: #666;">
-            <p>Status: 🟢 Online</p>
-            <p>Sincronização pendente: 0 itens</p>
+        <!-- SCREEN 4: APP SECTION (TRANSACTIONS) -->
+        <div id="app-section" class="screen" style="display: none;">
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <button id="btn-back-dashboard" class="secondary" style="width: auto; padding: 8px 15px; margin: 0;">←
+                    Voltar</button>
+                <div style="font-size: 0.9rem;">
+                    <span id="status-indicator"
+                        style="display: inline-block; width: 10px; height: 10px; background: #28a745; border-radius: 50%; margin-right: 5px;"></span>
+                    <span id="pending-count">0</span> pendentes
+                </div>
+            </div>
+
+            <div class="tabs" style="display: none;"> <!-- Hidden tabs, controlled by dashboard -->
+                <div class="tab active" data-tab="entrega">Entrega</div>
+                <div class="tab" data-tab="devolucao">Devolução</div>
+                <div class="tab" data-tab="estoque">Estoque</div>
+            </div>
+
+            <!-- Transaction Form -->
+            <div id="transaction-view">
+                <h2 id="form-title" style="text-align: center; margin-top: 0;">Registrar Entrega</h2>
+
+                <div class="form-group">
+                    <label>Colaborador</label>
+                    <select id="colaborador">
+                        <option value="">Carregando...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>EPI</label>
+                    <select id="epi">
+                        <option value="">Carregando...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Quantidade</label>
+                    <input type="number" id="qtd" value="1" min="1">
+                </div>
+
+                <div class="form-group">
+                    <label>Assinatura do Colaborador</label>
+                    <canvas id="signature-pad"></canvas>
+                    <button id="clear-signature" class="secondary"
+                        style="padding: 5px; font-size: 0.8rem; margin-top: 5px;">Limpar Assinatura</button>
+                </div>
+
+                <button id="btn-submit">CONFIRMAR ENTREGA</button>
+            </div>
+
+            <!-- Stock View -->
+            <div id="stock-view" style="display: none;">
+                <h2 style="text-align: center; margin-top: 0;">Estoque Atual</h2>
+                <div id="stock-list">
+                    <p>Carregando estoque...</p>
+                </div>
+                <button id="btn-force-sync" class="secondary">Sincronizar Agora</button>
+            </div>
         </div>
 
-    </main>
+    </div>
 
     <footer>
-        Sistema de Gestão de EPIs &copy; 2025
+        Construtora Tripoloni &copy; 2025 - Sistema de Gestão de EPIs
     </footer>
 
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="app.js?v=13"></script>
 </body>
+
 </html>
