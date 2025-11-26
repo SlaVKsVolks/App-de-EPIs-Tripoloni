@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de EPI - Demo</title>
+    <style>
+        /* CSS - O Visual do App */
+        :root {
+            --primary-color: #0056b3; /* Azul padrão corporativo */
+            --bg-color: #f4f4f9;
+            --card-bg: #ffffff;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Cabeçalho */
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        /* Área de Conteúdo */
+        main {
+            flex: 1;
+            padding: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Cartões (Box de formulário) */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: #fff;
+            box-sizing: border-box; /* Garante que padding não estoure a largura */
+        }
+
+        /* Botão Principal */
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:active {
+            background-color: #004494;
+        }
+
+        /* Botões de Navegação (Simulação) */
+        .nav-tabs {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 1rem;
+            background: #e0e0e0;
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .tab.active {
+            background: white;
+            font-weight: bold;
+            color: var(--primary-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Rodapé Fixo */
+        footer {
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.8rem;
+            color: #888;
+            border-top: 1px solid #ddd;
+            background: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Gestão de EPIs - Obra</h1>
+    </header>
+
+    <main>
+        <div class="nav-tabs">
+            <div class="tab active">Entrega</div>
+            <div class="tab">Devolução</div>
+            <div class="tab">Estoque</div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-top: 0; font-size: 1.1rem; color: #333;">Registrar Entrega</h2>
+            
+            <div class="form-group">
+                <label for="colaborador">Colaborador</label>
+                <select id="colaborador">
+                    <option value="">Selecione o colaborador...</option>
+                    <option>João Silva (Pedreiro)</option>
+                    <option>Maria Oliveira (Servente)</option>
+                    <option>Carlos Souza (Carpinteiro)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="epi">EPI</label>
+                <select id="epi">
+                    <option value="">Selecione o EPI...</option>
+                    <option>Capacete de Segurança (Azul)</option>
+                    <option>Luva de Raspa</option>
+                    <option>Óculos de Proteção Incolor</option>
+                    <option>Bota de Segurança nº 40</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="qtd">Quantidade</label>
+                <input type="number" id="qtd" value="1" min="1">
+            </div>
+
+            <div class="form-group">
+                <label>Assinatura (Simulação)</label>
+                <div style="border: 2px dashed #ccc; height: 80px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999; background: #fafafa;">
+                    Área de Assinatura Digital
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="alert('Isso é apenas uma demonstração visual!\nO backend será conectado em breve.')">
+                CONFIRMAR ENTREGA
+            </button>
+        </div>
+
+        <div class="card" style="text-align: center; font-size: 0.9rem; color: #666;">
+            <p>Status: 🟢 Online</p>
+            <p>Sincronização pendente: 0 itens</p>
+        </div>
+
+    </main>
+
+    <footer>
+        Sistema de Gestão de EPIs &copy; 2025
+    </footer>
+
+</body>
+</html>
