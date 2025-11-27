@@ -1,8 +1,7 @@
-const CACHE_NAME = 'epi-manager-v2';
+const CACHE_NAME = 'epi-manager-v4';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
-    './styles.css',
     './app.js',
     './manifest.json',
     'https://cdn-icons-png.flaticon.com/512/3063/3063823.png'
@@ -10,7 +9,7 @@ const ASSETS_TO_CACHE = [
 
 // Install Event - Cache Assets
 self.addEventListener('install', event => {
-    console.log('[SW] Installing Service Worker...');
+    console.log('[SW] Service Worker v3 installing...');
     self.skipWaiting(); // Force this SW to become the active one
     event.waitUntil(
         caches.open(CACHE_NAME)
@@ -37,7 +36,6 @@ self.addEventListener('activate', event => {
     return self.clients.claim();
 });
 
-// Fetch Event - Serve from Cache if Offline
 // Fetch Event - Serve from Cache if Offline
 self.addEventListener('fetch', event => {
     // 1. Ignore non-GET requests

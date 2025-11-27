@@ -13,242 +13,392 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f4f9;
             margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            padding: 0;
             min-height: 100vh;
         }
 
         #app-container {
             background: white;
             width: 100%;
-            max-width: 480px;
             min-height: 100vh;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
             position: relative;
         }
 
         header {
-            background-color: #0056b3;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        header h1 {
-            margin: 0;
-            font-size: 1.2rem;
-        }
-
-        .screen {
-            padding: 20px;
-            flex: 1;
-            display: none;
-            /* Hidden by default */
-            flex-direction: column;
-        }
-
-        /* Specific alignment for center-content screens */
-        #screen-construction,
-        #screen-login,
-        #screen-register {
-            justify-content: center;
-            /* Center vertically if flex-direction is column */
-            align-items: center;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-            width: 100%;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            background-color: white;
             color: #333;
-        }
+            padding: 15px 20px;
 
-        input,
-        select,
-        textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-
-        textarea.modern-textarea {
-            resize: vertical;
-            font-family: inherit;
-        }
-
-        button {
-            width: 100%;
-            padding: 15px;
-            background-color: #0056b3;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background-color: #004494;
-        }
-
-        button.secondary {
-            background-color: #6c757d;
-        }
-
-        button.secondary:hover {
-            background-color: #5a6268;
-        }
-
-        /* Dashboard Cards */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-            margin-top: 20px;
-            width: 100%;
-        }
-
-        .dashboard-card {
-            background: white;
-            border: 1px solid #eee;
-            border-radius: 12px;
-            padding: 25px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .dashboard-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-            border-color: #0056b3;
-        }
-
-        .dashboard-card i {
-            font-size: 2rem;
-            color: #0056b3;
-            margin-bottom: 10px;
-            font-style: normal;
-        }
-
-        .dashboard-card h3 {
-            margin: 0;
-            color: #333;
-            font-size: 1.1rem;
-        }
-
-        /* Success Message */
-        #register-success {
-            text-align: center;
-            padding: 30px 20px;
-        }
-
-        .success-icon {
-            font-size: 4rem;
-            color: #28a745;
-            margin-bottom: 20px;
-        }
-
-        /* Tabs */
-        .tabs {
-            display: flex;
-            background: #f8f9fa;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .tab {
-            flex: 1;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            color: #666;
-            font-weight: 500;
-        }
-
-        .tab.active {
-            border-bottom-color: #0056b3;
-            color: #0056b3;
-        }
-
-        /* Signature Pad */
-        #signature-pad {
-            border: 2px dashed #ccc;
-            border-radius: 8px;
-            width: 100%;
-            height: 200px;
-            background: #fff;
-            touch-action: none;
-            /* Prevent scrolling while signing */
-        }
-
-        /* Loading Overlay */
-        #loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            flex-direction: column;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #0056b3;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 10px;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
+            .screen {
+                padding: 20px;
+                flex: 1;
+                display: none;
+                flex-direction: column;
             }
 
-            100% {
-                transform: rotate(360deg);
+            #screen-construction,
+            #screen-login,
+            #screen-register {
+                justify-content: center;
+                align-items: center;
             }
-        }
 
-        #connection-status {
-            font-size: 0.8rem;
-            margin-right: 10px;
-        }
+            .form-group {
+                margin-bottom: 15px;
+                width: 100%;
+            }
 
-        /* Install Button */
-        #btn-install-pwa {
-            display: none;
-            margin: 10px 20px;
-            background-color: #28a745;
-        }
+            label {
+                display: block;
+                margin-bottom: 5px;
+                font-weight: bold;
+                color: #333;
+            }
+
+            input,
+            select,
+            textarea {
+                width: 100%;
+                padding: 12px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                box-sizing: border-box;
+                font-size: 16px;
+            }
+
+            textarea.modern-textarea {
+                resize: vertical;
+                font-family: inherit;
+            }
+
+            button {
+                width: 100%;
+                padding: 15px;
+                background-color: #0056b3;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 16px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+                margin-top: 10px;
+            }
+
+            button:hover {
+                background-color: #004494;
+            }
+
+            button.secondary {
+                background-color: #6c757d;
+            }
+
+            button.secondary:hover {
+                background-color: #5a6268;
+            }
+
+            .dashboard-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 20px;
+                margin-top: 20px;
+                width: 100%;
+            }
+
+            .dashboard-card {
+                background: white;
+                border: 1px solid #eee;
+                border-radius: 12px;
+                padding: 30px;
+                text-align: center;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+                cursor: pointer;
+                transition: transform 0.2s, box-shadow 0.2s;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .dashboard-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+                border-color: #0056b3;
+            }
+
+            .dashboard-card i {
+                font-size: 2.5rem;
+                color: #0056b3;
+                margin-bottom: 15px;
+                font-style: normal;
+            }
+
+            .dashboard-card h3 {
+                margin: 0;
+                color: #333;
+                font-size: 1.2rem;
+            }
+
+            #register-success {
+                text-align: center;
+                padding: 30px 20px;
+            }
+
+            .success-icon {
+                font-size: 4rem;
+                color: #28a745;
+                margin-bottom: 20px;
+            }
+
+            .tabs {
+                display: flex;
+                background: #f8f9fa;
+                border-bottom: 1px solid #ddd;
+            }
+
+            .tab {
+                flex: 1;
+                padding: 15px;
+                text-align: center;
+                cursor: pointer;
+                border-bottom: 3px solid transparent;
+                color: #666;
+                font-weight: 500;
+            }
+
+            .tab.active {
+                border-bottom-color: #0056b3;
+                color: #0056b3;
+            }
+
+            #signature-pad {
+                border: 2px dashed #ccc;
+                border-radius: 8px;
+                width: 100%;
+                height: 200px;
+                background: #fff;
+                touch-action: none;
+            }
+
+            #loading-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(255, 255, 255, 0.9);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+                flex-direction: column;
+            }
+
+            .spinner {
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #0056b3;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+                margin-bottom: 10px;
+            }
+
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            #connection-status {
+                font-size: 0.9rem;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .status-switch {
+                position: relative;
+                display: inline-block;
+                width: 50px;
+                height: 24px;
+            }
+
+            .status-switch-track {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #dc3545;
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                border-radius: 24px;
+                box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+
+            .status-switch-track.online {
+                background-color: #28a745;
+                box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 8px rgba(40, 167, 69, 0.3);
+            }
+
+            .status-switch-thumb {
+                position: absolute;
+                content: "";
+                height: 18px;
+                width: 18px;
+                left: 3px;
+                bottom: 3px;
+                background-color: white;
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                border-radius: 50%;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+
+            .status-switch-track.online .status-switch-thumb {
+                transform: translateX(26px);
+            }
+
+            #status-text {
+                font-weight: 500;
+                min-width: 70px;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                }
+
+                to {
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slideUp {
+                from {
+                    transform: translateY(20px);
+                    opacity: 0;
+                }
+
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+
+            .animate-fade-in {
+                animation: fadeIn 0.5s ease-out;
+            }
+
+            .animate-slide-up {
+                animation: slideUp 0.5s ease-out;
+            }
+
+            #btn-install-pwa {
+                display: none;
+                width: 90%;
+                max-width: 450px;
+                margin: 20px auto;
+                padding: 20px;
+                font-size: 1.2rem;
+                font-weight: bold;
+                background: linear-gradient(135deg, #28a745, #20c997, #28a745);
+                background-size: 200% 100%;
+                box-shadow: 0 4px 20px rgba(40, 167, 69, 0.4), 0 0 40px rgba(40, 167, 69, 0.3);
+                border-radius: 50px;
+                text-transform: uppercase;
+                letter-spacing: 1.5px;
+                color: white;
+                border: none;
+                cursor: pointer;
+                animation: glow-pulse 2s ease-in-out infinite, shimmer-btn 3s linear infinite;
+                position: relative;
+                overflow: hidden;
+            }
+
+            #btn-install-pwa:before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+                animation: rotate-glow 4s linear infinite;
+            }
+
+            @keyframes glow-pulse {
+
+                0%,
+                100% {
+                    box-shadow: 0 4px 20px rgba(40, 167, 69, 0.4), 0 0 40px rgba(40, 167, 69, 0.3);
+                    transform: scale(1);
+                }
+
+                50% {
+                    box-shadow: 0 6px 35px rgba(40, 167, 69, 0.7), 0 0 60px rgba(40, 167, 69, 0.5), 0 0 80px rgba(40, 167, 69, 0.3);
+                    transform: scale(1.05);
+                }
+            }
+
+            @keyframes shimmer-btn {
+                0% {
+                    background-position: 0% 50%;
+                }
+
+                100% {
+                    background-position: 200% 50%;
+                }
+            }
+
+            @keyframes rotate-glow {
+                0% {
+                    transform: rotate(0deg);
+                }
+
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .construction-card {
+                background: white;
+                border: 1px solid #eee;
+                border-radius: 12px;
+                padding: 20px;
+                text-align: center;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                cursor: pointer;
+                transition: all 0.2s;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 80px;
+                font-weight: 600;
+                color: #333;
+            }
+
+            .construction-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+                border-color: #0056b3;
+                color: #0056b3;
+            }
+
+            footer {
+                text-align: center;
+                padding: 15px;
+                font-size: 0.8rem;
+                color: #666;
+                background-color: #f8f9fa;
+                border-top: 1px solid #eee;
+                margin-top: auto;
+            }
     </style>
 </head>
 
@@ -259,17 +409,20 @@
         <p>Carregando...</p>
     </div>
 
-    <div id="app-container">
+    <div id="app-container" class="animate-fade-in">
         <header>
             <div style="display: flex; align-items: center;">
-                <img src="./logo-tripoloni.png" alt="Logo"
-                    style="height: 30px; margin-right: 10px; background: white; padding: 2px; border-radius: 4px;">
-                <div>
-                    <h1>Gestão de EPIs</h1>
-                    <small style="font-size: 0.7rem;">Construtora Tripoloni</small>
-                </div>
+                <img src="./logo-tripoloni.png" alt="Logo" style="height: 40px; margin-right: 10px;">
+                <h1>Gestão de EPIs</h1>
             </div>
-            <div id="connection-status">Verificando...</div>
+            <div id="connection-status">
+                <div class="status-switch">
+                    <div class="status-switch-track" id="status-switch-track">
+                        <div class="status-switch-thumb"></div>
+                    </div>
+                </div>
+                <span id="status-text">Verificando...</span>
+            </div>
         </header>
 
         <button id="btn-install-pwa">Instalar App</button>
@@ -282,11 +435,11 @@
                     <div class="spinner" style="margin: 0 auto;"></div>
                     <p>Carregando obras...</p>
                 </div>
-                <div id="construction-select-container" style="display: none;">
-                    <select id="select-construction" style="margin-bottom: 20px;">
-                        <option value="">Selecione...</option>
-                    </select>
-                    <button id="btn-confirm-construction">Confirmar</button>
+                <div id="construction-select-container" style="display: none; width: 100%;">
+                    <p style="color: #666; margin-bottom: 20px;">Toque na obra para acessar</p>
+                    <div id="construction-grid" class="dashboard-grid">
+                        <!-- Cards injected by JS -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -299,7 +452,7 @@
 
                 <!-- Google Sign-In Button Container -->
                 <div id="g_id_onload"
-                    data-client_id="692838477828-813luva39tgr4j2fka1tnbzdn03e8bso.apps.googleusercontent.com"
+                    data-client_id="602838477820-013luva39tgr40rmfsg21omkiao73j6k.apps.googleusercontent.com"
                     data-context="signin" data-ux_mode="popup" data-callback="handleCredentialResponse"
                     data-auto_prompt="false">
                 </div>
@@ -316,7 +469,7 @@
 
         <!-- SCREEN 2.5: REGISTRATION REQUEST -->
         <div id="screen-register" class="screen" style="display: none;">
-            <div id="register-form-container" style="width: 100%;">
+            <div id="register-form-container" style="width: 100%; max-width: 500px;">
                 <h2 style="text-align: center;">Solicitar Acesso</h2>
                 <p style="text-align: center; color: #666; margin-bottom: 20px;">
                     Preencha os dados abaixo para solicitar acesso ao sistema.
@@ -329,8 +482,13 @@
 
                 <div class="form-group">
                     <label>Email (Google)</label>
+                    <!-- Google Button Container for Registration -->
+                    <div id="register-google-btn-container" style="margin-bottom: 10px; display: none;">
+                        <p style="font-size: 0.9rem; color: #666; margin-bottom: 5px;">Identifique-se com o Google:</p>
+                        <!-- We will move the GSI button here via JS if needed -->
+                    </div>
                     <input type="email" id="register-email" readonly
-                        style="background-color: #e9ecef; cursor: not-allowed;">
+                        style="background-color: #e9ecef; cursor: not-allowed;" placeholder="Faça login para preencher">
                 </div>
 
                 <div class="form-group">
@@ -442,14 +600,14 @@
             </div>
         </div>
 
+        <footer>
+            Construtora Tripoloni &copy; 2025 - Sistema de Gestão de EPIs
+        </footer>
+
     </div>
 
-    <footer>
-        Construtora Tripoloni &copy; 2025 - Sistema de Gestão de EPIs
-    </footer>
-
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="app.js?v=13"></script>
+    <script src="app.js?v=15"></script>
 </body>
 
 </html>

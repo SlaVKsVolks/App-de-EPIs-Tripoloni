@@ -67,7 +67,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnBackLogin) {
         btnBackLogin.addEventListener('click', () => {
             document.getElementById('screen-register').style.display = 'none';
-            document.getElementById('screen-login').style.display = 'block';
+            document.getElementById('screen-login').style.display = 'flex';
+
+            // Move Google Button back to Login Screen
+            const loginContainer = document.querySelector('#screen-login > div');
+            const googleBtn = document.querySelector('.g_id_signin');
+            const googleBtnContainer = document.getElementById('register-google-btn-container');
+            const pLink = document.querySelector('#screen-login p:last-child'); // "Não tem acesso?" link
+
+            if (loginContainer && googleBtn && pLink) {
+                loginContainer.insertBefore(googleBtn, pLink);
+                if (googleBtnContainer) googleBtnContainer.style.display = 'none';
+            }
         });
     }
 
@@ -76,7 +87,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         linkRequest.addEventListener('click', (e) => {
             e.preventDefault();
             document.getElementById('screen-login').style.display = 'none';
-            document.getElementById('screen-register').style.display = 'block';
+            document.getElementById('screen-register').style.display = 'flex';
+
+            // Move Google Button to Registration Screen at Email Field
+            const googleBtnContainer = document.getElementById('register-google-btn-container');
+            const googleBtn = document.querySelector('.g_id_signin');
+            if (googleBtnContainer && googleBtn) {
+                googleBtnContainer.appendChild(googleBtn);
+                googleBtnContainer.style.display = 'block';
+            }
         });
     }
 
@@ -116,6 +135,9 @@ function parseJwt(token) {
 
 async function initAppFlow() {
     console.log('initAppFlow started');
+    const loadingDiv = document.getElementById('construction-loading');
+    const gridContainer = document.getElementById('construction-grid');
+    const selectContainer = document.getElementById('construction-select-container');
 
     // CHECK PERSISTENT LOGIN
     const savedUser = localStorage.getItem('currentUser');
@@ -142,12 +164,7 @@ async function initAppFlow() {
         return;
     }
 
-    // If no session, start normal flow
-    const loadingDiv = document.getElementById('construction-loading');
-    const selectContainer = document.getElementById('construction-select-container');
-    const select = document.getElementById('select-construction');
-    const btnConfirm = document.getElementById('btn-confirm-construction');
-
+    // If no session, fetch constructions
     try {
         console.log('Fetching constructions from:', API_URL);
         const response = await fetch(`${API_URL}?action=getConstructions`);
@@ -155,48 +172,40 @@ async function initAppFlow() {
         console.log('Fetch result:', result);
 
         if (result.result === 'success') {
-            select.innerHTML = '<option value="">Selecione...</option>';
+            gridContainer.innerHTML = ''; // Clear existing
+
             result.data.forEach(item => {
                 const name = item.Obra || item.Nome || item.Name || Object.values(item)[0];
-                const sheetId = item['Sheet ID'] || item.sheetId || item.SheetId;
+                const sheetId = item.SheetId || item.ID_Planilha || item.id;
 
                 if (name) {
-                    const option = document.createElement('option');
-                    option.value = name;
-                    option.innerText = name;
-                    if (sheetId) {
-                        option.dataset.sheetId = sheetId;
-                    }
-                    select.appendChild(option);
+                    const card = document.createElement('div');
+                    card.className = 'construction-card';
+                    card.innerHTML = `<h3>${name}</h3>`;
+                    card.onclick = () => handleCardSelection(name, sheetId);
+                    gridContainer.appendChild(card);
                 }
             });
 
             loadingDiv.style.display = 'none';
             selectContainer.style.display = 'block';
-        } else {
-            loadingDiv.innerHTML = '<p style="color: #dc3545;">Erro ao carregar obras.</p>';
-        }
-    } catch (err) {
-        console.error(err);
-        loadingDiv.innerHTML = '<p style="color: #dc3545;">Erro de conexão. Tente novamente.</p>';
-    }
+            selectContainer.classList.add('animate-slide-up');
 
-    if (btnConfirm) btnConfirm.addEventListener('click', handleConstructionSelection);
+        } else {
+            loadingDiv.innerHTML = '<p style="color: red;">Erro ao carregar obras.</p>';
+        }
+    } catch (error) {
+        console.error('Error fetching constructions:', error);
+        loadingDiv.innerHTML = '<p style="color: red;">Erro de conexão.</p>';
+    }
 }
 
-function handleConstructionSelection() {
-    const select = document.getElementById('select-construction');
-    if (!select.value) {
-        alert('Por favor, selecione uma obra.');
-        return;
-    }
-    currentConstruction = select.value;
-    const selectedOption = select.options[select.selectedIndex];
-    currentSheetId = selectedOption.dataset.sheetId;
+function handleCardSelection(name, sheetId) {
+    if (!name) return;
 
-    if (!currentSheetId) {
-        console.warn('No Sheet ID found for selected construction. API calls might fail if not using default.');
-    }
+    currentConstruction = name;
+    currentSheetId = sheetId;
+    console.log('Construction selected:', currentConstruction, 'Sheet ID:', currentSheetId);
 
     document.getElementById('screen-construction').style.display = 'none';
     document.getElementById('screen-login').style.display = 'block';
@@ -208,7 +217,6 @@ async function validateUserEmail(email) {
     try {
         console.log('Making API request to validate user...');
         const response = await fetch(`${API_URL}?action=validateUser&email=${encodeURIComponent(email)}&sheetId=${encodeURIComponent(currentSheetId)}`);
-        console.log('API response received:', response);
         const result = await response.json();
         console.log('Validation result:', result);
 
@@ -235,29 +243,20 @@ async function validateUserEmail(email) {
 
         } else {
             console.error('User validation failed:', result);
-            console.log('Debug info from backend:', result.debug);
 
             // Show Registration Screen
-            try {
-                console.log('Attempting to switch to registration screen...');
-                const loginScreen = document.getElementById('screen-login');
-                const registerScreen = document.getElementById('screen-register');
-                const emailInput = document.getElementById('register-email');
+            document.getElementById('screen-login').style.display = 'none';
+            document.getElementById('screen-register').style.display = 'block';
 
-                if (loginScreen && registerScreen) {
-                    loginScreen.style.display = 'none';
-                    registerScreen.style.display = 'block';
-                    console.log('Switched to registration screen.');
-                } else {
-                    console.error('Could not find screen elements:', { loginScreen, registerScreen });
-                }
+            const emailInput = document.getElementById('register-email');
+            if (emailInput) {
+                emailInput.value = email;
+            }
 
-                // Prefill email
-                if (emailInput) {
-                    emailInput.value = email;
-                }
-            } catch (uiErr) {
-                console.error('Error switching UI:', uiErr);
+            // Hide Google Button if it was moved here
+            const googleBtnContainer = document.getElementById('register-google-btn-container');
+            if (googleBtnContainer) {
+                googleBtnContainer.style.display = 'none';
             }
         }
     } catch (err) {
@@ -314,17 +313,21 @@ function handleLogout() {
 }
 
 function updateConnectionStatus() {
-    const statusEl = document.getElementById('connection-status');
-    const indicator = document.getElementById('status-indicator');
+    const statusText = document.getElementById('status-text');
+    const switchTrack = document.getElementById('status-switch-track');
+    const statusIndicator = document.getElementById('status-indicator');
 
-    if (navigator.onLine) {
-        statusEl.innerText = '🟢 Online';
-        indicator.innerText = 'Online';
-        indicator.style.background = 'rgba(40, 167, 69, 0.8)';
+    const isOnline = navigator.onLine;
+    console.log('Connection status:', isOnline ? 'Online' : 'Offline');
+
+    if (isOnline) {
+        if (statusText) statusText.innerText = 'Online';
+        if (switchTrack) switchTrack.classList.add('online');
+        if (statusIndicator) statusIndicator.style.background = 'rgba(40, 167, 69, 0.8)';
     } else {
-        statusEl.innerText = '🔴 Offline';
-        indicator.innerText = 'Offline';
-        indicator.style.background = 'rgba(220, 53, 69, 0.8)';
+        if (statusText) statusText.innerText = 'Offline';
+        if (switchTrack) switchTrack.classList.remove('online');
+        if (statusIndicator) statusIndicator.style.background = 'rgba(220, 53, 69, 0.8)';
     }
 }
 
