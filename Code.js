@@ -185,30 +185,34 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'No action specified' })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // ACTION: REQUEST ACCESS (Does not necessarily need a sheetId, but good to have context)
+    // ACTION: REQUEST ACCESS
     if (action === 'requestAccess') {
       const email = postData.email;
       const name = postData.name;
       const position = postData.position;
       const reason = postData.reason || 'No reason provided';
 
-      // Send email to the script owner (or hardcoded admin)
-      const adminEmail = Session.getEffectiveUser().getEmail(); // Or replace with specific email
-      const subject = `[EPI App] Access Request: ${name}`;
+      // REPLACE WITH YOUR EMAIL (The admin who should receive requests)
+      const ADMIN_EMAIL = 'apptripoloni@gmail.com';
+
+      const subject = `[EPI App] Solicitação de Acesso: ${name}`;
       const body = `
-            New Access Request:
+            Nova Solicitação de Acesso:
             
-            Name: ${name}
+            Nome: ${name}
             Email: ${email}
-            Position: ${position}
-            Reason: ${reason}
+            Cargo: ${position}
+            Motivo: ${reason}
             
-            Please add this user to the 'Usuários' tab in the relevant spreadsheet.
+            Acesse a planilha 'Usuários' da obra correspondente para liberar o acesso.
         `;
 
-      MailApp.sendEmail(adminEmail, subject, body);
-
-      return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'message': 'Request sent' })).setMimeType(ContentService.MimeType.JSON);
+      try {
+        MailApp.sendEmail(ADMIN_EMAIL, subject, body);
+        return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'message': 'Request sent' })).setMimeType(ContentService.MimeType.JSON);
+      } catch (mailError) {
+        return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Error sending email: ' + mailError.toString() })).setMimeType(ContentService.MimeType.JSON);
+      }
     }
 
     // VALIDATE SHEET ID FOR DB ACTIONS

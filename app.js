@@ -5,8 +5,7 @@
 
 // CONFIGURATION
 // REPLACE THIS URL WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
-const API_URL = 'https://script.google.com/macros/s/AKfycbx6NTGNFCPtDSTO1w5S00m0Nlv7GVsy5TffxgksCBwyHwYhdI9LdvMIfpAXwWsyJfP_QA/exec';
-
+const API_URL = 'https://script.google.com/macros/s/AKfycbz9o19FS3ZqrS5CG77fizVXVZAoLxSE7pfA6MC3Yp4Lal76MXQsmGzCP7TL5ynp4tBg9g/exec';
 const DB_NAME = 'epi_manager_db';
 const DB_VERSION = 1;
 
@@ -175,14 +174,33 @@ async function initAppFlow() {
             gridContainer.innerHTML = ''; // Clear existing
 
             result.data.forEach(item => {
-                const name = item.Obra || item.Nome || item.Name || Object.values(item)[0];
-                const sheetId = item.SheetId || item.ID_Planilha || item.id;
+                console.log('Construction Item:', item); // Debug log
+
+                // Robustly find the Name
+                const name = item.Obra || item.Nome || item.Name || item.construction || Object.values(item)[0];
+
+                // Robustly find the Sheet ID
+                // Check for various possible column headers
+                const sheetId = item['Sheet ID'] || item.SheetId || item.ID_Planilha || item.id || item.ID || item.Planilha || item.SpreadsheetId || item.sheet_id;
 
                 if (name) {
                     const card = document.createElement('div');
                     card.className = 'construction-card';
                     card.innerHTML = `<h3>${name}</h3>`;
-                    card.onclick = () => handleCardSelection(name, sheetId);
+
+                    if (!sheetId) {
+                        console.warn('No Sheet ID found for:', name, item);
+                        card.style.border = '1px solid red';
+                        card.title = 'Erro: ID da planilha não encontrado';
+                    }
+
+                    card.onclick = () => {
+                        if (sheetId) {
+                            handleCardSelection(name, sheetId);
+                        } else {
+                            alert('Erro: ID da planilha não configurado para esta obra. Verifique a planilha "APP_INICIAL".');
+                        }
+                    };
                     gridContainer.appendChild(card);
                 }
             });
