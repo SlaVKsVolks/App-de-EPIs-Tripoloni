@@ -1,0 +1,10 @@
+{
+    "name": "app-epis-tripoloni",
+    "version": "1.0.0",
+    "description": "App de gerenciamento de EPIs",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {}
+}

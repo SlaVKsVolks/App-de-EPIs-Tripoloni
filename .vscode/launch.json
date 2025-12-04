@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Rodar Projeto",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "start"
+            ],
+            "console": "integratedTerminal",
+            // Tenta abrir o navegador quando vê "localhost" no terminal
+            "serverReadyAction": {
+                // Ajustado para ler: "Server running at http://127.0.0.1:8080/"
+                "pattern": "Server running at http://.+:([0-9]+)/",
+                "uriFormat": "http://localhost:%s",
+                "action": "openExternally"
+            }
+        }
+    ]
+}

@@ -44,11 +44,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Start App Flow (Check for persistent login first)
     initAppFlow();
 
-    // Register Service Worker
+    // Register Service Worker with Smart Splash & Force Update
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('SW registered', reg))
-            .catch(err => console.error('SW failed', err));
+        initServiceWorker();
+    } else {
+        // Fallback for no SW support
+        const splash = document.getElementById('splash-screen');
+        if (splash) splash.style.display = 'none';
     }
 
     // Connection Status
@@ -470,13 +472,62 @@ async function syncData() {
         }
 
         // 2. Fetch Fresh Data
-        const response = await fetch(`${API_URL}?action=getData&obra=${encodeURIComponent(currentConstruction)}&sheetId=${encodeURIComponent(currentSheetId)}`);
+        let url = `${API_URL}?action=getData&sheetId=${encodeURIComponent(currentSheetId)}`;
+
+        // If NOT Admin, filter by current construction
+        // If Admin, fetch ALL data (omit obra param)
+        if (!currentUser || currentUser.tipo !== 'Admin') {
+            url += `&obra=${encodeURIComponent(currentConstruction)}`;
+        } else {
+            console.log('Admin user detected: Fetching ALL data (skipping obra filter)');
+        }
+
+        const response = await fetch(url);
         const data = await response.json();
 
         if (data.result === 'success') {
-            await saveToDB('employees', data.data.employees);
-            await saveToDB('epis', data.data.epis);
-            await saveToDB('stock', data.data.stock);
+            // NORMALIZE DATA KEYS FOR INDEXEDDB
+            // IDB expects 'ID' for employees/epis and 'ID_EPI' for stock
+
+            console.log('Raw Data received:', data.data);
+
+            const normalize = (list, idFieldNames, targetIdField) => {
+                return list.map(item => {
+                    // Find the first matching key from idFieldNames
+                    let foundId = null;
+                    for (const key of idFieldNames) {
+                        if (item[key]) {
+                            foundId = item[key];
+                            break;
+                        }
+                    }
+
+                    // Create new object with normalized key
+                    const newItem = { ...item };
+                    if (foundId) {
+                        newItem[targetIdField] = foundId;
+                    }
+                    return newItem;
+                }).filter(item => {
+                    const isValid = item[targetIdField] !== undefined && item[targetIdField] !== null && item[targetIdField] !== '';
+                    if (!isValid) {
+                        console.warn(`Skipping invalid item (missing ${targetIdField}):`, item);
+                    }
+                    return isValid;
+                });
+            };
+
+            const employees = normalize(data.data.employees, ['ID', 'id', 'ID do Funcionário', 'ID Funcionario'], 'ID');
+            const epis = normalize(data.data.epis, ['ID', 'id', 'ID do EPI', 'ID EPI', 'ID do Epi'], 'ID');
+            const stock = normalize(data.data.stock, ['ID_EPI', 'id_epi', 'ID do EPI', 'ID EPI'], 'ID_EPI');
+
+            console.log('Normalized Employees:', employees);
+            console.log('Normalized EPIs:', epis);
+            console.log('Normalized Stock:', stock);
+
+            await saveToDB('employees', employees);
+            await saveToDB('epis', epis);
+            await saveToDB('stock', stock);
 
             loadLocalData(); // Refresh UI
         }
@@ -775,4 +826,95 @@ async function handleRegistrationSubmit() {
     } finally {
         showLoading(false);
     }
+}
+
+// --- SERVICE WORKER & SMART SPLASH ---
+
+function initServiceWorker() {
+    const splash = document.getElementById('splash-screen');
+    const splashStatus = document.getElementById('splash-status');
+    let refreshing = false;
+
+    function hideSplash() {
+        if (splash && !splash.classList.contains('hidden')) {
+            splash.classList.add('hidden');
+            setTimeout(() => splash.style.display = 'none', 500);
+        }
+    }
+
+    // 1. Strict Offline Handling
+    if (!navigator.onLine) {
+        console.log('Offline detected. Skipping SW update check.');
+        hideSplash();
+        return;
+    }
+
+    // 2. Register SW
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+        console.log('SW Registered:', reg);
+
+        // 3. Timeout Safety Net (3.5s)
+        setTimeout(() => {
+            if (splash && !splash.classList.contains('hidden')) {
+                console.warn('Splash timeout. Forcing removal.');
+                hideSplash();
+            }
+        }, 3500);
+
+        // 4. Force Update Check
+        if (splashStatus) splashStatus.innerText = 'Verificando atualizações...';
+
+        // Check for updates immediately
+        reg.update().then(() => {
+            console.log('SW update check finished.');
+            // If no update found (waiting/installing), hide splash
+            if (!reg.waiting && !reg.installing) {
+                hideSplash();
+            }
+        }).catch(err => {
+            console.error('SW update failed:', err);
+            hideSplash();
+        });
+
+        // 5. Handle Updates
+        reg.onupdatefound = () => {
+            const installingWorker = reg.installing;
+            if (installingWorker) {
+                installingWorker.onstatechange = () => {
+                    if (installingWorker.state === 'installed') {
+                        if (navigator.serviceWorker.controller) {
+                            // New update available
+                            console.log('New content available; please refresh.');
+                            if (splashStatus) splashStatus.innerText = 'Atualizando aplicação...';
+                            // Splash stays visible until controllerchange reloads page
+                        } else {
+                            // Content is cached for the first time
+                            console.log('Content is cached for use offline.');
+                            hideSplash();
+                        }
+                    }
+                };
+            }
+        };
+    }).catch(error => {
+        console.error('SW registration failed:', error);
+        hideSplash();
+    });
+
+    // 6. Controller Change (Reload)
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+            console.log('Controller changed, reloading...');
+            refreshing = true;
+            window.location.reload();
+        }
+    });
+
+    // 7. Visibility Trigger (Resume)
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && navigator.onLine) {
+            console.log('App resumed. Checking for updates...');
+            navigator.serviceWorker.ready.then(reg => reg.update());
+        }
+    });
 }
