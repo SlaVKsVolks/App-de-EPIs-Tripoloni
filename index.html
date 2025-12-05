@@ -5,734 +5,252 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de EPIs - Construtora Tripoloni</title>
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://script.google.com">
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0056b3">
-    <link rel="icon" href="logo-tripoloni.png" type="image/png">
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-        }
+    <link rel="icon" href="logo-circle.svg" type="image/svg+xml">
 
-        #app-container {
-            background: white;
-            width: 100%;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        header {
-            background-color: white;
-            color: #333;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #eee;
-        }
-
-        header h1 {
-            margin: 0 0 0 10px;
-            font-size: 1.4rem;
-            background: linear-gradient(90deg, #0056b3, #00a8ff, #0056b3);
-            background-size: 200% 100%;
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: shimmer 3s ease-in-out infinite;
-            font-weight: 600;
-        }
-
-        @keyframes shimmer {
-
-            0%,
-            100% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-        }
-
-        .screen {
-            padding: 20px;
-            flex: 1;
-            display: none;
-            /* Hidden by default */
-            flex-direction: column;
-        }
-
-        /* Specific alignment for center-content screens */
-        #screen-construction,
-        #screen-login,
-        #screen-register {
-            justify-content: center;
-            /* Center vertically if flex-direction is column */
-            align-items: center;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-            width: 100%;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        input,
-        select,
-        textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-
-        textarea.modern-textarea {
-            resize: vertical;
-            font-family: inherit;
-        }
-
-        button {
-            width: 100%;
-            padding: 15px;
-            background-color: #0056b3;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background-color: #004494;
-        }
-
-        button.secondary {
-            background-color: #6c757d;
-        }
-
-        button.secondary:hover {
-            background-color: #5a6268;
-        }
-
-        /* Dashboard Cards */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            /* Responsive Grid */
-            gap: 20px;
-            margin-top: 20px;
-            width: 100%;
-        }
-
-        .dashboard-card {
-            background: white;
-            border: 1px solid #eee;
-            border-radius: 12px;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .dashboard-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            border-color: #0056b3;
-        }
-
-        .dashboard-card i {
-            font-size: 2.5rem;
-            color: #0056b3;
-            margin-bottom: 15px;
-            font-style: normal;
-        }
-
-        .dashboard-card h3 {
-            margin: 0;
-            color: #333;
-            font-size: 1.2rem;
-        }
-
-        /* Success Message */
-        #register-success {
-            text-align: center;
-            padding: 30px 20px;
-        }
-
-        .success-icon {
-            font-size: 4rem;
-            color: #28a745;
-            margin-bottom: 20px;
-            background: transparent;
-        }
-
-        /* Tabs */
-        .tabs {
-            display: flex;
-            background: #f8f9fa;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .tab {
-            flex: 1;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            color: #666;
-            font-weight: 500;
-        }
-
-        .tab.active {
-            border-bottom-color: #0056b3;
-            color: #0056b3;
-        }
-
-        /* Signature Pad */
-        #signature-pad {
-            border: 2px dashed #ccc;
-            border-radius: 8px;
-            width: 100%;
-            height: 200px;
-            background: #fff;
-            touch-action: none;
-            /* Prevent scrolling while signing */
-        }
-
-        /* Loading Overlay */
-        #loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            flex-direction: column;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #0056b3;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 10px;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Online/Offline Toggle Switch */
-        #connection-status {
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .status-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 24px;
-        }
-
-        /* --- INÍCIO DA NOVA ANIMAÇÃO (COLE AQUI) --- */
-
-        /* 1. Criando a pulsação Vermelha (Offline) */
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
-            70% { box-shadow: 0 0 0 6px rgba(220, 53, 69, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
-        }
-
-        /* 2. Criando a pulsação Verde (Online) */
-        @keyframes pulse-green {
-            0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
-            70% { box-shadow: 0 0 0 6px rgba(40, 167, 69, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
-        }
-
-        .status-switch-track {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #dc3545; /* Vermelho Base */
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 24px;
-            /* Aplica a animação vermelha infinita */
-            animation: pulse-red 2s infinite; 
-        }
-
-        .status-switch-track.online {
-            background-color: #28a745; /* Verde Base */
-            box-shadow: none; /* Remove sombra fixa antiga */
-            /* Troca para a animação verde infinita */
-            animation: pulse-green 2s infinite;
-        }
-
-        .status-switch-thumb {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .status-switch-track.online .status-switch-thumb {
-            transform: translateX(26px);
-        }
-
-        /* --- FIM DO CÓDIGO COLADO --- */
-
-        #status-text {
-            font-weight: 500;
-            min-width: 50px;
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(20px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        .animate-slide-up {
-            animation: slideUp 0.5s ease-out;
-        }
-
-        /* Install Button */
-        #btn-install-pwa {
-            display: none;
-            /* Controlled by JS */
-            width: 90%;
-            max-width: 450px;
-            margin: 20px auto;
-            padding: 20px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            background: linear-gradient(135deg, #28a745, #20c997, #28a745);
-            background-size: 200% 100%;
-            box-shadow: 0 4px 20px rgba(40, 167, 69, 0.4), 0 0 40px rgba(40, 167, 69, 0.3);
-            border-radius: 50px;
-            /* Pill shape */
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: white;
-            border: none;
-            cursor: pointer;
-            animation: glow-pulse 2s ease-in-out infinite, shimmer-btn 3s linear infinite;
-            position: relative;
-            overflow: hidden;
-        }
-
-        #btn-install-pwa:before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
-            animation: rotate-glow 4s linear infinite;
-        }
-
-        @keyframes glow-pulse {
-
-            0%,
-            100% {
-                box-shadow: 0 4px 20px rgba(40, 167, 69, 0.4), 0 0 40px rgba(40, 167, 69, 0.3);
-                transform: scale(1);
-            }
-
-            50% {
-                box-shadow: 0 6px 35px rgba(40, 167, 69, 0.7), 0 0 60px rgba(40, 167, 69, 0.5), 0 0 80px rgba(40, 167, 69, 0.3);
-                transform: scale(1.05);
-            }
-        }
-
-        @keyframes shimmer-btn {
-            0% {
-                background-position: 0% 50%;
-            }
-
-            100% {
-                background-position: 200% 50%;
-            }
-        }
-
-        @keyframes rotate-glow {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Construction Card */
-        .construction-card {
-            background: white;
-            border: 1px solid #eee;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 80px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .construction-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            border-color: #0056b3;
-            color: #0056b3;
-        }
-
-        /* Footer */
-        footer {
-            text-align: center;
-            padding: 15px;
-            font-size: 0.8rem;
-            color: #666;
-            background-color: #f8f9fa;
-            border-top: 1px solid #eee;
-            margin-top: auto;
-        }
-    </style>
-    <style>
-        /* Smart Splash Screen */
-        #splash-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #0056b3;
-            /* Brand Color */
-            z-index: 9999;
-            /* Highest priority */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            transition: opacity 0.5s ease-out;
-        }
-
-        #splash-screen.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .splash-logo {
-            width: 100px;
-            height: 100px;
-            margin-bottom: 20px;
-            background: white;
-            border-radius: 50%;
-            padding: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            animation: pulse-logo 2s infinite;
-        }
-
-        @keyframes pulse-logo {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.05);
-            }
-
-            100% {
-                transform: scale(1);
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
     <!-- SMART SPLASH SCREEN -->
     <div id="splash-screen">
-        <img src="./logo-tripoloni.png" alt="Logo" class="splash-logo">
-        <h2 style="font-weight: 300; margin: 0;">Carregando...</h2>
-        <p id="splash-status" style="font-size: 0.8rem; opacity: 0.8; margin-top: 10px;">Verificando atualizações</p>
+        <img src="logo-circle.svg" alt="Tripoloni" class="splash-logo">
+        <p id="splash-status" class="splash-status-text">Iniciando...</p>
     </div>
 
-    <div id="loading-overlay" style="display: none;">
+    <!-- TOAST CONTAINER IS DYNAMICALLY CREATED BUT WE CAN HAVE A PLACEHOLDER IF NEEDED (UI.js handles it) -->
+
+    <div id="loading-overlay" class="d-none">
         <div class="spinner"></div>
         <p>Carregando...</p>
     </div>
 
     <div id="app-container" class="animate-fade-in">
         <header>
-            <div style="display: flex; align-items: center;">
-                <img src="./logo-tripoloni.png" alt="Logo" style="height: 40px; margin-right: 10px;">
-                <h1>Gestão de EPIs</h1>
+            <div class="header-left">
+                <img src="logo-t.svg" alt="T" class="brand-logo">
+                <span class="brand-text">TRIPOLONI</span>
             </div>
+            <h1 class="text-center">Gestão de EPIs</h1>
             <div id="connection-status">
+                <!-- WiFi Icons -->
+                <svg id="icon-online" class="wifi-icon" style="display: none; width: 20px; height: 20px;"
+                    viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 21L24 9C24 9 20.988 6 12 6C3.012 6 0 9 0 9L12 21Z" fill="#28a745" />
+                </svg>
+                <svg id="icon-poor" class="wifi-icon" style="display: none; width: 20px; height: 20px;"
+                    viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 21L24 9C24 9 20.988 6 12 6C3.012 6 0 9 0 9L12 21Z" fill="#ffc107" />
+                </svg>
+                <svg id="icon-offline" class="wifi-icon" style="display: none; width: 20px; height: 20px;"
+                    viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M23.64 7c-.45-.34-4.93-4-11.64-4-1.5 0-2.89.19-4.15.48L18.18 13.8 23.64 7zm-6.6 6.6L6.6 3.2 1.39 1.9 0 3.31l3.46 3.48L2.3 7.91 1 9.49 12 22.69l3.6-4.32 3.29 3.31 1.41-1.41-3.26-3.26z"
+                        fill="#dc3545" />
+                </svg>
+
                 <div class="status-switch">
-                    <div class="status-switch-track" id="status-switch-track">
+                    <div id="status-switch-track" class="status-switch-track">
                         <div class="status-switch-thumb"></div>
                     </div>
                 </div>
-                <span id="status-text">Verificando...</span>
             </div>
         </header>
 
-        <button id="btn-install-pwa">Instalar App</button>
+        <main id="main-content">
 
-        <!-- SCREEN 1: CONSTRUCTION SELECTION -->
-        <div id="screen-construction" class="screen" style="display: flex;">
-            <div style="text-align: center; width: 100%;">
-                <h2>Selecione a Obra</h2>
-                <div id="construction-loading">
-                    <div class="spinner" style="margin: 0 auto;"></div>
-                    <p>Carregando obras...</p>
-                </div>
-                <div id="construction-select-container" style="display: none; width: 100%;">
-                    <p style="color: #666; margin-bottom: 20px;">Toque na obra para acessar</p>
-                    <div id="construction-grid" class="dashboard-grid">
-                        <!-- Cards injected by JS -->
+            <!-- SCREEN 1: CONSTRUCTION SELECTION -->
+            <div id="screen-construction" class="screen d-flex">
+                <div class="center-container">
+                    <h2>Selecione a Obra</h2>
+                    <div id="construction-loading">
+                        <div class="spinner spinner-loading"></div>
+                        <p>Carregando obras...</p>
+                    </div>
+                    <div id="construction-select-container" class="d-none w-100">
+                        <p class="text-secondary mb-20">Toque na obra para acessar</p>
+                        <div id="construction-grid" class="dashboard-grid">
+                            <!-- Cards injected by JS -->
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- SCREEN 2: LOGIN -->
-        <div id="screen-login" class="screen" style="display: none;">
-            <div style="text-align: center; width: 100%;">
-                <h2>Login</h2>
-                <p>Faça login com sua conta Google para continuar.</p>
+            <!-- SCREEN 2: LOGIN -->
+            <div id="screen-login" class="screen d-none">
+                <div class="center-container">
+                    <h2>Login</h2>
+                    <p>Faça login com sua conta Google para continuar.</p>
 
-                <!-- Google Sign-In Button Container -->
-                <div id="g_id_onload"
-                    data-client_id="602838477820-013luva39tgr40rmfsg21omkiao73j6k.apps.googleusercontent.com"
-                    data-context="signin" data-ux_mode="popup" data-callback="handleCredentialResponse"
-                    data-auto_prompt="false">
-                </div>
-
-                <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline"
-                    data-text="signin_with" data-size="large" data-logo_alignment="left">
-                </div>
-
-                <p style="margin-top: 20px; font-size: 0.9rem;">
-                    Não tem acesso? <a href="#" id="link-request-access">Solicitar cadastro</a>
-                </p>
-            </div>
-        </div>
-
-        <!-- SCREEN 2.5: REGISTRATION REQUEST -->
-        <div id="screen-register" class="screen" style="display: none;">
-            <div id="register-form-container" style="width: 100%; max-width: 500px;">
-                <h2 style="text-align: center;">Solicitar Acesso</h2>
-                <p style="text-align: center; color: #666; margin-bottom: 20px;">
-                    Preencha os dados abaixo para solicitar acesso ao sistema.
-                </p>
-
-                <div class="form-group">
-                    <label>Nome Completo</label>
-                    <input type="text" id="register-name" placeholder="Seu nome">
-                </div>
-
-                <div class="form-group">
-                    <label>Email (Google)</label>
-                    <!-- Google Button Container for Registration -->
-                    <div id="register-google-btn-container" style="margin-bottom: 10px; display: none;">
-                        <p style="font-size: 0.9rem; color: #666; margin-bottom: 5px;">Identifique-se com o Google:</p>
-                        <!-- We will move the GSI button here via JS if needed -->
+                    <!-- Google Sign-In Button Container -->
+                    <div id="g_id_onload"
+                        data-client_id="602838477820-013luva39tgr40rmfsg21omkiao73j6k.apps.googleusercontent.com"
+                        data-context="signin" data-ux_mode="popup" data-callback="handleCredentialResponse"
+                        data-auto_prompt="false">
                     </div>
-                    <input type="email" id="register-email" readonly
-                        style="background-color: #e9ecef; cursor: not-allowed;" placeholder="Faça login para preencher">
-                </div>
 
-                <div class="form-group">
-                    <label>Cargo / Função</label>
-                    <input type="text" id="register-position" placeholder="Ex: Técnico de Segurança">
-                </div>
+                    <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline"
+                        data-text="signin_with" data-size="large" data-logo_alignment="left">
+                    </div>
 
-                <div class="form-group">
-                    <label>Motivo do Acesso</label>
-                    <textarea id="register-reason" class="modern-textarea" rows="4"
-                        placeholder="Descreva brevemente por que precisa de acesso..."></textarea>
-                </div>
-
-                <button id="btn-submit-registration">Enviar Solicitação</button>
-                <button id="btn-back-to-login" class="secondary">Voltar</button>
-            </div>
-
-            <div id="register-success" style="display: none;">
-                <div class="success-icon">✓</div>
-                <h3>Solicitação Enviada!</h3>
-                <p>Sua solicitação foi enviada para o administrador.</p>
-                <p>Você receberá um aviso assim que seu acesso for liberado.</p>
-                <button id="btn-success-back" onclick="location.reload()">Voltar ao Início</button>
-            </div>
-        </div>
-
-        <!-- SCREEN 3: DASHBOARD (NEW) -->
-        <div id="screen-dashboard" class="screen" style="display: none;">
-            <h2 style="text-align: center;">O que deseja fazer?</h2>
-            <p style="text-align: center; color: #666;">Selecione uma opção abaixo</p>
-
-            <div class="dashboard-grid">
-                <div class="dashboard-card" id="card-delivery">
-                    <i>📦</i>
-                    <h3>Registrar Entrega</h3>
-                </div>
-                <div class="dashboard-card" id="card-return">
-                    <i>↩️</i>
-                    <h3>Registrar Devolução</h3>
-                </div>
-                <div class="dashboard-card" id="card-stock">
-                    <i>📋</i>
-                    <h3>Ver Estoque</h3>
+                    <p class="mt-20 font-sm">
+                        Não tem acesso? <a href="#" id="link-request-access">Solicitar cadastro</a>
+                    </p>
                 </div>
             </div>
 
-            <button id="btn-logout" class="secondary" style="margin-top: auto;">Sair / Trocar Obra</button>
-        </div>
+            <!-- SCREEN 2.5: REGISTRATION REQUEST -->
+            <div id="screen-register" class="screen d-none">
+                <div id="register-form-container" class="register-container">
+                    <h2 class="text-center">Solicitar Acesso</h2>
+                    <p class="text-center text-secondary mb-20">
+                        Preencha os dados abaixo para solicitar acesso ao sistema.
+                    </p>
 
-        <!-- SCREEN 4: APP SECTION (TRANSACTIONS) -->
-        <div id="app-section" class="screen" style="display: none;">
+                    <div class="form-group">
+                        <label>Nome Completo</label>
+                        <input type="text" id="register-name" placeholder="Seu nome">
+                    </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <button id="btn-back-dashboard" class="secondary" style="width: auto; padding: 8px 15px; margin: 0;">←
-                    Voltar</button>
-                <div style="font-size: 0.9rem;">
-                    <span id="status-indicator"
-                        style="display: inline-block; width: 10px; height: 10px; background: #28a745; border-radius: 50%; margin-right: 5px;"></span>
-                    <span id="pending-count">0</span> pendentes
+                    <div class="form-group">
+                        <label>Email (Google)</label>
+                        <div id="register-google-btn-container" class="mb-20 d-none">
+                            <p class="font-sm text-secondary mb-20">Identifique-se com o
+                                Google:</p>
+                        </div>
+                        <input type="email" id="register-email" readonly class="input-readonly"
+                            placeholder="Faça login para preencher">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Cargo / Função</label>
+                        <input type="text" id="register-position" placeholder="Ex: Técnico de Segurança">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Motivo do Acesso</label>
+                        <textarea id="register-reason" class="modern-textarea" rows="4"
+                            placeholder="Descreva brevemente por que precisa de acesso..."></textarea>
+                    </div>
+
+                    <button id="btn-submit-registration">Enviar Solicitação</button>
+                    <button id="btn-back-to-login" class="secondary">Voltar</button>
+                </div>
+
+                <div id="register-success" class="d-none">
+                    <div class="success-icon">✓</div>
+                    <h3>Solicitação Enviada!</h3>
+                    <p>Sua solicitação foi enviada para o administrador.</p>
+                    <p>Você receberá um aviso assim que seu acesso for liberado.</p>
+                    <button id="btn-success-back" onclick="location.reload()">Voltar ao Início</button>
                 </div>
             </div>
 
-            <div class="tabs" style="display: none;"> <!-- Hidden tabs, controlled by dashboard -->
-                <div class="tab active" data-tab="entrega">Entrega</div>
-                <div class="tab" data-tab="devolucao">Devolução</div>
-                <div class="tab" data-tab="estoque">Estoque</div>
+            <!-- SCREEN 3: DASHBOARD (NEW) -->
+            <div id="screen-dashboard" class="screen d-none">
+                <h2 class="text-center">O que deseja fazer?</h2>
+                <p class="text-center text-secondary">Selecione uma opção abaixo</p>
+
+                <div class="dashboard-grid">
+                    <div class="dashboard-card" id="card-delivery">
+                        <i>📦</i>
+                        <h3>Registrar Entrega</h3>
+                    </div>
+                    <div class="dashboard-card" id="card-return">
+                        <i>↩️</i>
+                        <h3>Registrar Devolução</h3>
+                    </div>
+                    <div class="dashboard-card" id="card-stock">
+                        <i>📋</i>
+                        <h3>Ver Estoque</h3>
+                    </div>
+                </div>
+
+                <button id="btn-logout" class="secondary mt-auto">Sair / Trocar Obra</button>
             </div>
 
-            <!-- Transaction Form -->
-            <div id="transaction-view">
-                <h2 id="form-title" style="text-align: center; margin-top: 0;">Registrar Entrega</h2>
+            <!-- SCREEN 4: APP SECTION (TRANSACTIONS) -->
+            <div id="app-section" class="screen d-none">
 
-                <div class="form-group">
-                    <label>Colaborador</label>
-                    <select id="colaborador">
-                        <option value="">Carregando...</option>
-                    </select>
+                <div class="app-section-header">
+                    <button id="btn-back-dashboard" class="secondary btn-back-custom">←
+                        Voltar</button>
+                    <div class="font-sm">
+                        <span id="status-indicator" class="status-dot"></span>
+                        <span id="pending-count">0</span> pendentes
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label>EPI</label>
-                    <select id="epi">
-                        <option value="">Carregando...</option>
-                    </select>
+                <div class="tabs d-none"> <!-- Hidden tabs, controlled by dashboard -->
+                    <div class="tab active" data-tab="entrega">Entrega</div>
+                    <div class="tab" data-tab="devolucao">Devolução</div>
+                    <div class="tab" data-tab="estoque">Estoque</div>
                 </div>
 
-                <div class="form-group">
-                    <label>Quantidade</label>
-                    <input type="number" id="qtd" value="1" min="1">
+                <div id="transaction-view">
+                    <h2 id="form-title" class="text-center mb-20">Registrar Entrega</h2>
+
+                    <div class="form-group">
+                        <label>Colaborador</label>
+                        <select id="colaborador" class="w-100">
+                            <option value="">Carregando...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>EPI</label>
+                        <select id="epi" class="w-100">
+                            <option value="">Carregando...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Quantidade</label>
+                        <input type="number" id="qtd" value="1" min="1" class="w-100">
+                    </div>
+
+                    <label class="mt-20 d-block">Assinatura do Colaborador</label>
                 </div>
 
-                <div class="form-group">
-                    <label>Assinatura do Colaborador</label>
-                    <canvas id="signature-pad"></canvas>
-                    <button id="clear-signature" class="secondary"
-                        style="padding: 5px; font-size: 0.8rem; margin-top: 5px;">Limpar Assinatura</button>
-                </div>
-
+                <canvas id="signature-pad"></canvas>
+                <button id="clear-signature" class="secondary btn-clear-sig">Limpar Assinatura</button>
                 <button id="btn-submit">CONFIRMAR ENTREGA</button>
             </div>
 
+
             <!-- Stock View -->
-            <div id="stock-view" style="display: none;">
-                <h2 style="text-align: center; margin-top: 0;">Estoque Atual</h2>
+            <div id="stock-view" class="d-none">
+                <h2 class="stock-title">Estoque Atual</h2>
                 <div id="stock-list">
                     <p>Carregando estoque...</p>
                 </div>
                 <button id="btn-force-sync" class="secondary">Sincronizar Agora</button>
             </div>
-        </div>
+        </main>
 
         <footer>
+            <div style="margin-bottom: 10px;">
+                <button id="btn-debug-net"
+                    style="background: #6f42c1; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 0.8rem;">
+                    Test Net
+                </button>
+            </div>
             Construtora Tripoloni &copy; 2025 - Sistema de Gestão de EPIs
         </footer>
 
     </div>
 
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="app.js?v=14"></script>
+    <script type="module" src="js/main.js?v=18"></script>
 </body>
 
 </html>

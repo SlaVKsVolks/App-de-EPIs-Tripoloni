@@ -1,15 +1,21 @@
-const CACHE_NAME = 'epi-manager-v5';
+const CACHE_NAME = 'app-ep-v9';
 const ASSETS_TO_CACHE = [
-    './',
-    './index.html',
-    './app.js',
-    './manifest.json',
-    'https://cdn-icons-png.flaticon.com/512/3063/3063823.png'
+    '/',
+    '/index.html',
+    '/styles.css',
+    '/js/main.js',
+    '/js/api.js',
+    '/js/config.js',
+    '/js/db.js',
+    '/js/ui.js',
+    '/logo-circle.svg',
+    '/logo-t.svg',
+    '/manifest.json'
 ];
 
 // Install Event - Cache Assets
 self.addEventListener('install', event => {
-    console.log('[SW] Service Worker v3 installing...');
+    console.log('[SW] Service Worker v8 installing...');
     self.skipWaiting(); // Force this SW to become the active one
     event.waitUntil(
         caches.open(CACHE_NAME)
@@ -36,7 +42,7 @@ self.addEventListener('activate', event => {
     return self.clients.claim();
 });
 
-// Fetch Event - Serve from Cache if Offline
+// Fetch Event - Network First, Fallback to Cache
 self.addEventListener('fetch', event => {
     // 1. Ignore non-GET requests
     if (event.request.method !== 'GET') return;
@@ -46,21 +52,41 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // 3. Cache First, Fallback to Network
+    // 3. Strategy: Network First
     event.respondWith(
-        caches.match(event.request)
-            .then(response => {
-                if (response) {
-                    return response;
+        fetch(event.request)
+            .then(networkResponse => {
+                // Check if we received a valid response (200 OK)
+                // We allow 'basic' (same-origin) and 'cors' (external valid)
+                if (!networkResponse || networkResponse.status !== 200 || (networkResponse.type !== 'basic' && networkResponse.type !== 'cors')) {
+                    return networkResponse;
                 }
-                return fetch(event.request).catch(error => {
-                    console.error('[SW] Fetch failed:', event.request.url, error);
-                    // Return a fallback response so the app doesn't crash
-                    return new Response('Network error occurred', {
-                        status: 408,
-                        statusText: 'Network Error'
+
+                // Clone the response because it's a stream and can only be consumed once
+                const responseToCache = networkResponse.clone();
+
+                caches.open(CACHE_NAME)
+                    .then(cache => {
+                        cache.put(event.request, responseToCache);
                     });
-                });
+
+                return networkResponse;
+            })
+            .catch(() => {
+                console.log('[SW] Network failed, falling back to cache for:', event.request.url);
+                return caches.match(event.request)
+                    .then(cachedResponse => {
+                        if (cachedResponse) {
+                            return cachedResponse;
+                        }
+
+                        // Fallback response if nothing is in cache
+                        return new Response('Você está offline e este recurso não foi salvo.', {
+                            status: 503,
+                            statusText: 'Service Unavailable',
+                            headers: { 'Content-Type': 'text/plain' }
+                        });
+                    });
             })
     );
 });
