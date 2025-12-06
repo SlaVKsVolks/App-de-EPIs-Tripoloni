@@ -7,8 +7,6 @@ export async function syncData(currentSheetId, currentConstruction, currentUser)
     try {
         // 1. Push Pending Transactions
         const pending = await getFromDB('pending_movements');
-        // Notify pending count to main/UI? We will return it or use a callback mechanism if we were strictly clean, 
-        // but for now let's return stats or just do the work.
 
         if (pending.length > 0) {
             console.log('Pushing transactions...', pending);
@@ -28,7 +26,8 @@ export async function syncData(currentSheetId, currentConstruction, currentUser)
                 showToast('Sincronização realizada com sucesso!', 'success');
             } else {
                 console.error('Sync error:', result);
-                showToast('Erro ao sincronizar transações.', 'error');
+                const msg = result.error || 'Erro desconhecido ao sincronizar.';
+                showToast('Erro: ' + msg, 'error');
             }
         }
 
@@ -41,16 +40,16 @@ export async function syncData(currentSheetId, currentConstruction, currentUser)
             console.log('Admin user detected: Fetching ALL data');
         }
 
-        const response = await fetch(url);
-        const data = await response.json();
+        const dataResponse = await fetch(url);
+        const data = await dataResponse.json();
 
         if (data.result === 'success') {
             await saveDataToLocal(data.data);
             return 'success';
         }
+
     } catch (err) {
         console.error('Sync failed:', err);
-        // showToast('Falha na sincronização. Verifique sua conexão.', 'warning'); // Be less annoying
         throw err;
     }
 }
@@ -75,9 +74,17 @@ async function saveDataToLocal(data) {
     const epis = normalize(data.epis, ['ID', 'id', 'ID do EPI', 'ID EPI', 'ID do Epi'], 'ID');
     const stock = normalize(data.stock, ['ID_EPI', 'id_epi', 'ID do EPI', 'ID EPI'], 'ID_EPI');
 
+    // Users (flexible ID)
+    const users = normalize(data.users, ['ID', 'id', 'Id', 'Email'], 'ID');
+
+    // Movements (History)
+    const movements = data.movements || [];
+
     await saveToDB('employees', employees);
     await saveToDB('epis', epis);
     await saveToDB('stock', stock);
+    await saveToDB('users', users);
+    await saveToDB('movements', movements);
 }
 
 export async function validateUserEmail(email, sheetId) {
@@ -98,6 +105,19 @@ export async function requestAccess(data) {
 }
 
 export async function fetchConstructions() {
-    const response = await fetch(`${API_URL}?action=getConstructions`);
-    return await response.json();
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+    try {
+        const response = await fetch(`${API_URL}?action=getConstructions`, {
+            signal: controller.signal
+        });
+        clearTimeout(id);
+        if (!response.ok) throw new Error('Network response was not ok');
+        return await response.json();
+    } catch (e) {
+        clearTimeout(id);
+        console.error("Fetch Constructions Failed:", e);
+        throw e; // Propagate to main.js catch block
+    }
 }

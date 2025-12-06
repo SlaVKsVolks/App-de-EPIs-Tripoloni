@@ -27,6 +27,36 @@
         <p id="splash-status" class="splash-status-text">Iniciando...</p>
     </div>
 
+    <!-- SIDE MENU & BACKDROP -->
+    <div id="menu-backdrop"></div>
+    <aside id="side-menu">
+        <div class="menu-header">
+            <h3>Menu</h3>
+            <button id="btn-close-menu" class="btn-icon">✕</button>
+        </div>
+        <div class="menu-content">
+            <div class="menu-item-group">
+                <button id="btn-logout-menu" class="menu-item danger">
+                    <i>🚪</i> Sair / Trocar Obra
+                </button>
+            </div>
+
+            <div class="menu-item-group debug-section">
+                <hr>
+                <div class="menu-row">
+                    <span>Test Net</span>
+                    <label class="switch">
+                        <input type="checkbox" id="chk-test-net">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="menu-footer">
+                <small>Construtora Tripoloni © 2025</small>
+            </div>
+        </div>
+    </aside>
+
     <!-- TOAST CONTAINER IS DYNAMICALLY CREATED BUT WE CAN HAVE A PLACEHOLDER IF NEEDED (UI.js handles it) -->
 
     <div id="loading-overlay" class="d-none">
@@ -37,21 +67,47 @@
     <div id="app-container" class="animate-fade-in">
         <header>
             <div class="header-left">
+                <div class="menu-toggle" id="menu-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
                 <img src="logo-t.svg" alt="T" class="brand-logo">
                 <span class="brand-text">TRIPOLONI</span>
             </div>
             <h1 class="text-center">Gestão de EPIs</h1>
             <div id="connection-status">
                 <!-- WiFi Icons -->
-                <svg id="icon-online" class="wifi-icon" style="display: none; width: 20px; height: 20px;"
+                <!-- 1. GOOD (Green, Full) -->
+                <svg id="icon-wifi-good" class="wifi-icon" style="display: none; width: 24px; height: 24px;"
                     viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 21L24 9C24 9 20.988 6 12 6C3.012 6 0 9 0 9L12 21Z" fill="#28a745" />
+                    <path
+                        d="M12.01 21.49L23.64 7c-.45-.34-4.93-4-11.64-4C5.28 3 0.81 6.66 0.36 7l11.63 14.49.01.01.01-.01z"
+                        fill="#28a745" />
                 </svg>
-                <svg id="icon-poor" class="wifi-icon" style="display: none; width: 20px; height: 20px;"
+
+                <!-- 2. MODERATE (Yellow, 3 bars) -->
+                <svg id="icon-wifi-moderate" class="wifi-icon" style="display: none; width: 24px; height: 24px;"
                     viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 21L24 9C24 9 20.988 6 12 6C3.012 6 0 9 0 9L12 21Z" fill="#ffc107" />
+                    <path
+                        d="M12.01 21.49L23.64 7c-.45-.34-4.93-4-11.64-4C5.28 3 0.81 6.66 0.36 7l11.63 14.49.01.01.01-.01z"
+                        fill="#e0e0e0" opacity="0.3" />
+                    <path d="M12 9c3.31 0 6.31 1.34 8.57 3.5L12 21.49 3.43 12.5C5.69 10.34 8.69 9 12 9z"
+                        fill="#ffc107" />
                 </svg>
-                <svg id="icon-offline" class="wifi-icon" style="display: none; width: 20px; height: 20px;"
+
+                <!-- 3. POOR (Orange, 1 bar/Dot) -->
+                <svg id="icon-wifi-poor" class="wifi-icon" style="display: none; width: 24px; height: 24px;"
+                    viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12.01 21.49L23.64 7c-.45-.34-4.93-4-11.64-4C5.28 3 0.81 6.66 0.36 7l11.63 14.49.01.01.01-.01z"
+                        fill="#e0e0e0" opacity="0.3" />
+                    <path d="M12 18c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" fill="#fd7e14" />
+                    <circle cx="12" cy="18" r="3" fill="#fd7e14" />
+                </svg>
+
+                <!-- 4. OFFLINE (Red, Slash/Exclamation) -->
+                <svg id="icon-wifi-offline" class="wifi-icon" style="display: none; width: 24px; height: 24px;"
                     viewBox="0 0 24 24" fill="currentColor">
                     <path
                         d="M23.64 7c-.45-.34-4.93-4-11.64-4-1.5 0-2.89.19-4.15.48L18.18 13.8 23.64 7zm-6.6 6.6L6.6 3.2 1.39 1.9 0 3.31l3.46 3.48L2.3 7.91 1 9.49 12 22.69l3.6-4.32 3.29 3.31 1.41-1.41-3.26-3.26z"
@@ -156,101 +212,313 @@
             </div>
 
             <!-- SCREEN 3: DASHBOARD (NEW) -->
+            <!-- SCREEN 3: DASHBOARD (HOME) -->
+            <!-- SCREEN 3: DASHBOARD (HOME) -->
             <div id="screen-dashboard" class="screen d-none">
-                <h2 class="text-center">O que deseja fazer?</h2>
-                <p class="text-center text-secondary">Selecione uma opção abaixo</p>
+                <div class="center-container">
+                    <h2 class="text-center">Olá, <span id="user-name-display">Colaborador</span></h2>
+                    <p class="text-center text-secondary mb-20">O que deseja fazer hoje?</p>
 
-                <div class="dashboard-grid">
-                    <div class="dashboard-card" id="card-delivery">
-                        <i>📦</i>
-                        <h3>Registrar Entrega</h3>
+                    <button id="btn-new-transaction" class="btn-large-primary">
+                        <i>➕</i> Fazer Lançamento
+                    </button>
+
+                    <!-- RECENT HISTORY -->
+                    <div class="list-header mb-20" style="justify-content: flex-start; margin-top: 30px;">
+                        <h3 style="margin:0;">Histórico Recente</h3>
                     </div>
-                    <div class="dashboard-card" id="card-return">
-                        <i>↩️</i>
-                        <h3>Registrar Devolução</h3>
-                    </div>
-                    <div class="dashboard-card" id="card-stock">
-                        <i>📋</i>
-                        <h3>Ver Estoque</h3>
-                    </div>
-                </div>
-
-                <button id="btn-logout" class="secondary mt-auto">Sair / Trocar Obra</button>
-            </div>
-
-            <!-- SCREEN 4: APP SECTION (TRANSACTIONS) -->
-            <div id="app-section" class="screen d-none">
-
-                <div class="app-section-header">
-                    <button id="btn-back-dashboard" class="secondary btn-back-custom">←
-                        Voltar</button>
-                    <div class="font-sm">
-                        <span id="status-indicator" class="status-dot"></span>
-                        <span id="pending-count">0</span> pendentes
+                    <div id="dashboard-history-list" class="list-container">
+                        <p class="text-secondary text-center">Nenhuma movimentação recente.</p>
                     </div>
                 </div>
-
-                <div class="tabs d-none"> <!-- Hidden tabs, controlled by dashboard -->
-                    <div class="tab active" data-tab="entrega">Entrega</div>
-                    <div class="tab" data-tab="devolucao">Devolução</div>
-                    <div class="tab" data-tab="estoque">Estoque</div>
-                </div>
-
-                <div id="transaction-view">
-                    <h2 id="form-title" class="text-center mb-20">Registrar Entrega</h2>
-
-                    <div class="form-group">
-                        <label>Colaborador</label>
-                        <select id="colaborador" class="w-100">
-                            <option value="">Carregando...</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>EPI</label>
-                        <select id="epi" class="w-100">
-                            <option value="">Carregando...</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Quantidade</label>
-                        <input type="number" id="qtd" value="1" min="1" class="w-100">
-                    </div>
-
-                    <label class="mt-20 d-block">Assinatura do Colaborador</label>
-                </div>
-
-                <canvas id="signature-pad"></canvas>
-                <button id="clear-signature" class="secondary btn-clear-sig">Limpar Assinatura</button>
-                <button id="btn-submit">CONFIRMAR ENTREGA</button>
             </div>
 
 
-            <!-- Stock View -->
-            <div id="stock-view" class="d-none">
-                <h2 class="stock-title">Estoque Atual</h2>
-                <div id="stock-list">
-                    <p>Carregando estoque...</p>
+            <!-- TRANSACTION TYPE SELECTION (Dynamic) -->
+            <div id="screen-transaction-type" class="screen d-none">
+                <div class="center-container">
+                    <h2 class="text-center">Novo Lançamento</h2>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card" data-type="entrega">
+                            <i>📤</i>
+                            <h3>Entrega</h3>
+                            <p>Saída de EPI para colaborador</p>
+                        </div>
+                        <div class="dashboard-card" data-type="devolucao">
+                            <i>📥</i>
+                            <h3>Devolução</h3>
+                            <p>Retorno de EPI para estoque</p>
+                        </div>
+                        <div class="dashboard-card" data-type="compra">
+                            <i>🛒</i>
+                            <h3>Compra</h3>
+                            <p>Entrada de novos itens</p>
+                        </div>
+                        <div class="dashboard-card" data-type="ajuste">
+                            <i>🔧</i>
+                            <h3>Ajuste</h3>
+                            <p>Correção de estoque</p>
+                        </div>
+                    </div>
+                    <button id="btn-cancel-transaction" class="secondary mt-20">Cancelar</button>
                 </div>
-                <button id="btn-force-sync" class="secondary">Sincronizar Agora</button>
             </div>
-        </main>
 
-        <footer>
-            <div style="margin-bottom: 10px;">
-                <button id="btn-debug-net"
-                    style="background: #6f42c1; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 0.8rem;">
-                    Test Net
-                </button>
+            <!-- GENERIC ENTITY LIST SCREEN (For Stock, Employees, etc) -->
+            <div id="screen-entity-list" class="screen d-none">
+                <!-- Populated dynamically by UI.renderEntityList -->
             </div>
-            Construtora Tripoloni &copy; 2025 - Sistema de Gestão de EPIs
-        </footer>
 
+            <!-- TRANSACTION WIZARD -->
+            <div id="transaction-wizard" class="screen d-none">
+                <!-- WIZARD HEADER with Progress -->
+                <div class="wizard-header">
+                    <button id="btn-wizard-back" class="wizard-back-btn">
+                        <svg viewBox="0 0 24 24" width="24" height="24">
+                            <path fill="currentColor"
+                                d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+                        </svg>
+                    </button>
+                    <div class="wizard-progress">
+                        <div class="wizard-step" data-step="1">
+                            <div class="step-circle">1</div>
+                            <span class="step-label">Colaborador</span>
+                        </div>
+                        <div class="wizard-step-line"></div>
+                        <div class="wizard-step" data-step="2">
+                            <div class="step-circle">2</div>
+                            <span class="step-label">EPI</span>
+                        </div>
+                        <div class="wizard-step-line"></div>
+                        <div class="wizard-step" data-step="3">
+                            <div class="step-circle">3</div>
+                            <span class="step-label">Assinatura</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 1: SELECT EMPLOYEE -->
+                <div id="wizard-step-1" class="wizard-content active">
+                    <h2 id="wizard-title" class="text-center">Entrega de EPI</h2>
+                    <p class="text-center text-secondary mb-20">Selecione o colaborador</p>
+
+                    <div class="search-container">
+                        <div class="search-box">
+                            <svg class="search-icon" viewBox="0 0 24 24" width="20" height="20">
+                                <path fill="currentColor"
+                                    d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                            </svg>
+                            <input type="text" id="employee-search" class="search-input"
+                                placeholder="Busque por nome, apelido ou matrícula..." autocomplete="off">
+                        </div>
+                        <div id="employee-search-results" class="search-results"></div>
+                    </div>
+
+                    <!-- Employee Card (shown after selection) -->
+                    <div id="employee-card" class="employee-card d-none">
+                        <div class="employee-photo-container">
+                            <div id="employee-photo" class="employee-photo">
+                                <svg viewBox="0 0 24 24" width="60" height="60">
+                                    <path fill="#ccc"
+                                        d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                </svg>
+                            </div>
+                            <button id="btn-change-employee" class="btn-change-employee">Trocar</button>
+                        </div>
+                        <div class="employee-details">
+                            <h3 id="employee-name">Nome do Colaborador</h3>
+                            <div class="employee-info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">Função</span>
+                                    <span id="employee-role" class="info-value">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">CPF</span>
+                                    <span id="employee-cpf" class="info-value">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Matrícula</span>
+                                    <span id="employee-matricula" class="info-value">-</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Admissão</span>
+                                    <span id="employee-admission" class="info-value">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="selected-employee-id">
+                    </div>
+
+                    <button id="btn-step1-next" class="btn-primary btn-wizard-action d-none">
+                        Prosseguir <span class="btn-arrow">→</span>
+                    </button>
+                </div>
+
+                <!-- STEP 2: SELECT EPI -->
+                <div id="wizard-step-2" class="wizard-content">
+                    <h2 class="text-center">Selecione o EPI</h2>
+                    <p class="text-center text-secondary mb-20">Busque por nome, CA ou código de barras</p>
+
+                    <div class="search-container">
+                        <div class="search-box">
+                            <svg class="search-icon" viewBox="0 0 24 24" width="20" height="20">
+                                <path fill="currentColor"
+                                    d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                            </svg>
+                            <input type="text" id="epi-search" class="search-input"
+                                placeholder="Nome, CA ou código de barras..." autocomplete="off">
+                            <button id="btn-scan-barcode" class="btn-scan-barcode" title="Escanear código de barras">
+                                <svg viewBox="0 0 24 24" width="24" height="24">
+                                    <path fill="currentColor"
+                                        d="M4 6h2v12H4V6zm3 0h1v12H7V6zm2 0h3v12H9V6zm4 0h1v12h-1V6zm3 0h2v12h-2V6zm3 0h1v12h-1V6z" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="epi-search-results" class="search-results"></div>
+                    </div>
+
+                    <!-- EPI Card (shown after selection) -->
+                    <div id="epi-card" class="epi-card d-none">
+                        <div class="epi-icon">🦺</div>
+                        <div class="epi-details">
+                            <h3 id="epi-name">Nome do EPI</h3>
+                            <div class="epi-info-row">
+                                <span class="epi-ca" id="epi-ca">CA: -</span>
+                                <span class="epi-stock" id="epi-stock">Estoque: -</span>
+                            </div>
+                        </div>
+                        <button id="btn-change-epi" class="btn-change-epi">Trocar</button>
+                        <input type="hidden" id="selected-epi-id">
+                    </div>
+
+                    <!-- Quantity -->
+                    <div id="quantity-section" class="quantity-section d-none">
+                        <label class="quantity-label">Quantidade</label>
+                        <div class="quantity-control">
+                            <button id="btn-qty-minus" class="qty-btn">−</button>
+                            <input type="number" id="epi-quantity" value="1" min="1" max="99">
+                            <button id="btn-qty-plus" class="qty-btn">+</button>
+                        </div>
+                    </div>
+
+                    <button id="btn-step2-next" class="btn-primary btn-wizard-action d-none">
+                        Prosseguir para Assinatura <span class="btn-arrow">→</span>
+                    </button>
+                </div>
+
+                <!-- STEP 3: SIGNATURE -->
+                <div id="wizard-step-3" class="wizard-content wizard-step-signature">
+                    <div class="signature-header">
+                        <h2 class="text-center">Assinatura</h2>
+                        <p class="text-center text-secondary">Assine na área abaixo para confirmar</p>
+                    </div>
+
+                    <!-- Transaction Summary -->
+                    <div class="transaction-summary">
+                        <div class="summary-item">
+                            <span class="summary-label">Colaborador:</span>
+                            <span id="summary-employee" class="summary-value">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">EPI:</span>
+                            <span id="summary-epi" class="summary-value">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Quantidade:</span>
+                            <span id="summary-qty" class="summary-value">-</span>
+                        </div>
+                    </div>
+
+                    <div class="signature-area">
+                        <canvas id="wizard-signature-pad"></canvas>
+                        <button id="btn-clear-wizard-signature" class="btn-clear-signature">
+                            <svg viewBox="0 0 24 24" width="16" height="16">
+                                <path fill="currentColor"
+                                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                            </svg>
+                            Limpar
+                        </button>
+                    </div>
+
+                    <button id="btn-finish-transaction" class="btn-primary btn-finish">
+                        ✓ FINALIZAR LANÇAMENTO
+                    </button>
+                </div>
+
+                <!-- Barcode Scanner Modal -->
+                <div id="barcode-modal" class="modal d-none">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Escanear Código de Barras</h3>
+                            <button id="btn-close-scanner" class="modal-close">×</button>
+                        </div>
+                        <div id="barcode-scanner" class="barcode-scanner">
+                            <video id="scanner-video" playsinline></video>
+                        </div>
+                        <p class="text-center text-secondary">Aponte a câmera para o código de barras</p>
+                    </div>
+                </div>
+            </div>
     </div>
 
+    <!-- BOTTOM NAVIGATION -->
+    <nav id="bottom-nav" class="bottom-nav d-none">
+        <button class="nav-item active" data-nav="dashboard">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+            </svg>
+            <span>Lançamentos</span>
+        </button>
+        <button class="nav-item" data-nav="estoque">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm0 4c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm6 12H6v-1.4c0-2 4-3.1 6-3.1s6 1.1 6 3.1V19z" />
+            </svg>
+            <span>Estoque</span>
+        </button>
+        <button class="nav-item" data-nav="funcionarios">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+            </svg>
+            <span>Equipe</span>
+        </button>
+        <button class="nav-item" data-nav="epis">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+            </svg>
+            <span>EPIs</span>
+        </button>
+        <button class="nav-item" data-nav="usuarios">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            </svg>
+            <span>Usuários</span>
+        </button>
+    </nav>
+
+
+    <!-- Cloudflare Web Analytics (Optional, can be removed) -->
+
+    <!-- AUTH BRIDGE (Must be before main.js) -->
+    <script>
+        // Fix for "callback is not a function" race condition
+        window.handleCredentialResponse = function (response) {
+            console.log("GSI Callback received");
+            if (window.onGoogleLogin) {
+                window.onGoogleLogin(response);
+            } else {
+                console.warn("App script not loaded yet. Queuing login...");
+                window.pendingGoogleLogin = response;
+            }
+        };
+    </script>
+
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script type="module" src="js/main.js?v=18"></script>
+    <script type="module" src="js/main.js?v=22"></script>
 </body>
 
 </html>

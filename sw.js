@@ -1,4 +1,4 @@
-const CACHE_NAME = 'app-ep-v9';
+const CACHE_NAME = 'app-ep-v17';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
@@ -8,6 +8,7 @@ const ASSETS_TO_CACHE = [
     '/js/config.js',
     '/js/db.js',
     '/js/ui.js',
+    '/js/wizard.js',
     '/logo-circle.svg',
     '/logo-t.svg',
     '/manifest.json'
@@ -15,7 +16,7 @@ const ASSETS_TO_CACHE = [
 
 // Install Event - Cache Assets
 self.addEventListener('install', event => {
-    console.log('[SW] Service Worker v8 installing...');
+    console.log('[SW] Service Worker v10 installing...');
     self.skipWaiting(); // Force this SW to become the active one
     event.waitUntil(
         caches.open(CACHE_NAME)

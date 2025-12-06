@@ -1,338 +1,438 @@
 /**
  * EPI Management System - Google Apps Script Backend
  * 
+ * VERSION: v2.3 (Business Logic & Data Quality Fixes)
+ * 
  * INSTRUCTIONS:
- * 1. Create a new Google Sheet named "EPI_APP_BASE_422" (or use existing).
- * 2. Ensure tabs exist: "Funcionários", "Usuários", "EPIs", "Estoque Principal", "Movimentações".
- * 3. Extensions > Apps Script > Paste this code.
- * 4. Deploy > New Deployment > Type: Web App > Execute as: Me > Who has access: Anyone.
- * 5. Copy the Web App URL and paste it into app.js.
+ * 1. Extensions > Apps Script > Paste this code.
+ * 2. Deploy > New Deployment > Type: Web App > Execute as: Me > Who has access: Anyone.
+ * 3. Copy the Web App URL and update 'js/config.js' in the frontend.
  */
 
 const SCRIPT_PROP = PropertiesService.getScriptProperties();
 
-// CENTRAL REGISTRY SHEET ID (This holds the list of all constructions)
+// CENTRAL REGISTRY SHEET ID (Holds the list of all constructions)
 const CONSTRUCTIONS_SHEET_ID = '1n4slOjyiDzL9XFm6GLlFGJxH3eCoSc-ZT9VDpUEuUSg';
 
-// Mapping of requested "tables" to Sheet Tab Names
 const SHEET_MAPPING = {
   'employees': 'Funcionários',
   'users': 'Usuários',
   'epis': 'EPIs',
   'stock': 'Estoque Principal',
   'movements': 'Movimentações',
-  'constructions': 'Obras' // Assumed tab name in the central sheet
+  'constructions': 'Obras'
 };
 
 function doGet(e) {
-  const lock = LockService.getScriptLock();
-  lock.tryLock(10000);
-
-  try {
-    const action = e.parameter.action;
-    const obra = e.parameter.obra; // Optional filter
-    const sheetId = e.parameter.sheetId; // Dynamic Sheet ID from frontend
-
-    if (!action) {
-      return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'No action specified' })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // 1. ACTION: GET CONSTRUCTIONS (Uses Central Registry)
-    if (action === 'getConstructions') {
-      const constructionsDoc = SpreadsheetApp.openById(CONSTRUCTIONS_SHEET_ID);
-      const sheet = constructionsDoc.getSheets()[0]; // Get first sheet
-      const data = sheet.getDataRange().getValues();
-      const headers = data[0];
-      const rows = data.slice(1);
-
-      const result = rows.map(row => {
-        let obj = {};
-        headers.forEach((header, index) => {
-          obj[header] = row[index];
-        });
-        return obj;
-      });
-
-      return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'data': result })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // 2. VALIDATE SHEET ID FOR OTHER ACTIONS
-    if (!sheetId) {
-      return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Missing sheetId' })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    const doc = SpreadsheetApp.openById(sheetId);
-
-    // 3. ACTION: GET DATA (Employees, EPIs, Stock)
-    if (action === 'getData') {
-      const result = {};
-
-      // Fetch Employees
-      result.employees = getSheetData(doc, SHEET_MAPPING.employees, obra ? { colIndex: getColIndex(doc, SHEET_MAPPING.employees, 'Obra'), value: obra } : null);
-
-      // Fetch EPIs
-      result.epis = getSheetData(doc, SHEET_MAPPING.epis);
-
-      // Fetch Stock
-      result.stock = getSheetData(doc, SHEET_MAPPING.stock, obra ? { colIndex: getColIndex(doc, SHEET_MAPPING.stock, 'Obra'), value: obra } : null);
-
-      return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'data': result })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // 4. ACTION: VALIDATE USER
-    if (action === 'validateUser') {
-      return validateUser(e, doc);
-    }
-
-    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Invalid action' })).setMimeType(ContentService.MimeType.JSON);
-
-  } catch (e) {
-    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': e.toString() })).setMimeType(ContentService.MimeType.JSON);
-  } finally {
-    lock.releaseLock();
-  }
-}
-
-function validateUser(e, doc) {
-  var email = e.parameter.email;
-
-  if (!email) {
-    return ContentService.createTextOutput(JSON.stringify({ result: 'error', error: 'Email is required' })).setMimeType(ContentService.MimeType.JSON);
-  }
-
-  var debugInfo = {
-    receivedEmail: email,
-    sheetName: doc.getName(),
-    usersFound: 0,
-    headers: []
-  };
-
-  try {
-    var userSheet = doc.getSheetByName(SHEET_MAPPING.users);
-    if (!userSheet) {
-      return ContentService.createTextOutput(JSON.stringify({
-        result: 'error',
-        error: 'Tab "Usuários" not found in sheet: ' + debugInfo.sheetName,
-        debug: debugInfo
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    var data = userSheet.getDataRange().getValues();
-    var headers = data[0].map(function (h) { return String(h).toLowerCase().trim(); });
-    debugInfo.headers = headers;
-
-    // Find email column (flexible matching)
-    var emailColIndex = headers.indexOf('email');
-    if (emailColIndex === -1) emailColIndex = headers.indexOf('e-mail');
-    if (emailColIndex === -1) emailColIndex = headers.indexOf('usuario'); // Fallback
-
-    if (emailColIndex === -1) {
-      return ContentService.createTextOutput(JSON.stringify({
-        result: 'error',
-        error: 'Email column not found',
-        debug: debugInfo
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    var user = null;
-    var cleanInputEmail = email.trim().toLowerCase();
-
-    // Debug: Log first 5 emails found
-    debugInfo.firstFewEmails = [];
-
-    for (var i = 1; i < data.length; i++) {
-      var row = data[i];
-      var rowEmail = String(row[emailColIndex]).trim().toLowerCase();
-
-      if (debugInfo.firstFewEmails.length < 5) {
-        debugInfo.firstFewEmails.push(rowEmail);
-      }
-
-      if (rowEmail === cleanInputEmail) {
-        user = {};
-        for (var j = 0; j < headers.length; j++) {
-          user[headers[j]] = row[j]; // Map all columns
-        }
-        break;
-      }
-    }
-
-    if (user) {
-      return ContentService.createTextOutput(JSON.stringify({ result: 'success', user: user, debug: debugInfo })).setMimeType(ContentService.MimeType.JSON);
-    } else {
-      return ContentService.createTextOutput(JSON.stringify({ result: 'error', error: 'User not found', debug: debugInfo })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({
-      result: 'error',
-      error: err.toString(),
-      debug: debugInfo
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
+  return handleRequest(e, 'GET');
 }
 
 function doPost(e) {
+  return handleRequest(e, 'POST');
+}
+
+function handleRequest(e, method) {
   const lock = LockService.getScriptLock();
-  lock.tryLock(10000);
+  lock.tryLock(30000);
 
   try {
-    const postData = JSON.parse(e.postData.contents);
-    const action = postData.action;
-    const sheetId = postData.sheetId;
+    const params = method === 'POST' ? JSON.parse(e.postData.contents) : e.parameter;
+    const action = params.action;
+    const sheetId = params.sheetId;
 
-    if (!action) {
-      return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'No action specified' })).setMimeType(ContentService.MimeType.JSON);
-    }
+    if (!action) return jsonResponse({ 'result': 'error', 'error': 'No action specified' });
 
-    // ACTION: REQUEST ACCESS
-    if (action === 'requestAccess') {
-      const email = postData.email;
-      const name = postData.name;
-      const position = postData.position;
-      const reason = postData.reason || 'No reason provided';
+    // --- NON-DB ACTIONS ---
+    if (action === 'getConstructions') return getConstructions();
+    if (action === 'requestAccess') return requestAccess(params);
 
-      // REPLACE WITH YOUR EMAIL (The admin who should receive requests)
-      const ADMIN_EMAIL = 'apptripoloni@gmail.com';
+    // --- DB ACTIONS (Require Sheet ID) ---
+    if (!sheetId) return jsonResponse({ 'result': 'error', 'error': 'Missing sheetId' });
 
-      const subject = `[EPI App] Solicitação de Acesso: ${name}`;
-      const body = `
-            Nova Solicitação de Acesso:
-            
-            Nome: ${name}
-            Email: ${email}
-            Cargo: ${position}
-            Motivo: ${reason}
-            
-            Acesse a planilha 'Usuários' da obra correspondente para liberar o acesso.
-        `;
+    const doc = SpreadsheetApp.openById(sheetId);
 
-      try {
-        MailApp.sendEmail(ADMIN_EMAIL, subject, body);
-        return ContentService.createTextOutput(JSON.stringify({ 'result': 'success', 'message': 'Request sent' })).setMimeType(ContentService.MimeType.JSON);
-      } catch (mailError) {
-        return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Error sending email: ' + mailError.toString() })).setMimeType(ContentService.MimeType.JSON);
-      }
-    }
+    if (action === 'getData') return getData(doc, params.obra);
+    if (action === 'validateUser') return validateUser(doc, params.email);
+    if (action === 'syncTransactions') return syncTransactions(doc, params.transactions);
 
-    // VALIDATE SHEET ID FOR DB ACTIONS
-    if (!sheetId) {
-      return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Missing sheetId' })).setMimeType(ContentService.MimeType.JSON);
-    }
+    return jsonResponse({ 'result': 'error', 'error': 'Invalid action' });
 
-    // ACTION: SYNC TRANSACTIONS
-    if (action === 'syncTransactions') {
-      const transactions = postData.transactions;
-      const doc = SpreadsheetApp.openById(sheetId);
-      const movementSheet = doc.getSheetByName(SHEET_MAPPING.movements);
-      const stockSheet = doc.getSheetByName(SHEET_MAPPING.stock);
-
-      const processedIds = [];
-      const errors = [];
-
-      transactions.forEach(tx => {
-        try {
-          // Append Row
-          movementSheet.appendRow([
-            tx.id,
-            new Date(tx.timestamp), // Or tx.dateString
-            tx.userId,
-            tx.employeeId,
-            tx.epiId,
-            tx.type, // 'ENTREGA' or 'DEVOLUCAO'
-            tx.quantity,
-            tx.obra || '',
-            tx.signature || ''
-          ]);
-
-          // 2. Update Stock
-          updateStock(stockSheet, tx.epiId, tx.quantity, tx.type, tx.obra);
-
-          processedIds.push(tx.id);
-        } catch (err) {
-          errors.push({ id: tx.id, error: err.toString() });
-        }
-      });
-
-      return ContentService.createTextOutput(JSON.stringify({
-        'result': 'success',
-        'processed': processedIds,
-        'errors': errors
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': 'Invalid action' })).setMimeType(ContentService.MimeType.JSON);
-
-  } catch (e) {
-    return ContentService.createTextOutput(JSON.stringify({ 'result': 'error', 'error': e.toString() })).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return jsonResponse({ 'result': 'error', 'error': err.toString() });
   } finally {
     lock.releaseLock();
   }
 }
 
-// --- Helper Functions ---
+// ==========================================
+// ACTION HANDLERS
+// ==========================================
 
-function getSheetData(doc, sheetName, filter) {
-  const sheet = doc.getSheetByName(sheetName);
+function getConstructions() {
+  const doc = SpreadsheetApp.openById(CONSTRUCTIONS_SHEET_ID);
+  const sheet = doc.getSheets()[0];
+  const data = getSheetDataAsJson(sheet);
+  return jsonResponse({ 'result': 'success', 'data': data });
+}
+
+function getData(doc, obraFilter) {
+  const result = {};
+
+  // Employees: Filter by Obra if provided
+  const empSheet = doc.getSheetByName(SHEET_MAPPING.employees);
+  result.employees = getSheetDataAsJson(empSheet, obraFilter ? { col: 'Obra', val: obraFilter } : null);
+
+  // EPIs: All
+  const epiSheet = doc.getSheetByName(SHEET_MAPPING.epis);
+  result.epis = getSheetDataAsJson(epiSheet);
+
+  // Stock: Filter by Obra if provided
+  const stockSheet = doc.getSheetByName(SHEET_MAPPING.stock);
+  result.stock = getSheetDataAsJson(stockSheet, obraFilter ? { col: 'Obra', val: obraFilter } : null);
+
+  // Users: All (for validation/listing)
+  const usersSheet = doc.getSheetByName(SHEET_MAPPING.users);
+  result.users = getSheetDataAsJson(usersSheet);
+
+  // Movements: Recent History (Last 50)
+  const movSheet = doc.getSheetByName(SHEET_MAPPING.movements);
+  result.movements = getRecentMovements(movSheet);
+
+  return jsonResponse({ 'result': 'success', 'data': result });
+}
+
+function getRecentMovements(sheet) {
   if (!sheet) return [];
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return [];
+
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const startRow = Math.max(2, lastRow - 49); // Read last 50
+  const numRows = lastRow - startRow + 1;
+
+  const data = sheet.getRange(startRow, 1, numRows, sheet.getLastColumn()).getValues();
+
+  // Map and Reverse (Newest first)
+  return data.map(row => {
+    let obj = {};
+    headers.forEach((h, i) => obj[h] = row[i]);
+    return obj;
+  }).reverse();
+}
+
+function validateUser(doc, email) {
+  if (!email) return jsonResponse({ result: 'error', error: 'Email is required' });
+
+  const sheet = doc.getSheetByName(SHEET_MAPPING.users);
+  if (!sheet) return jsonResponse({ result: 'error', error: 'Tab "Usuários" not found' });
 
   const data = sheet.getDataRange().getValues();
-  const headers = data[0];
-  const rows = data.slice(1);
+  const headers = data[0].map(h => String(h).toLowerCase().trim());
 
-  const result = rows.map(row => {
-    let obj = {};
-    headers.forEach((header, index) => {
-      obj[header] = row[index];
-    });
-    return obj;
-  });
+  // Flexible Email Column Finding
+  let emailIdx = headers.indexOf('email');
+  if (emailIdx === -1) emailIdx = headers.indexOf('e-mail');
+  if (emailIdx === -1) emailIdx = headers.indexOf('usuario');
 
-  if (filter && filter.colIndex !== -1) {
-    return result.filter(item => {
-      const key = headers[filter.colIndex];
-      return String(item[key]) === String(filter.value);
-    });
+  if (emailIdx === -1) {
+    return jsonResponse({ result: 'error', error: 'Email column not found', debug: headers });
   }
 
-  return result;
-}
-
-function getColIndex(doc, sheetName, colNamePartial) {
-  const sheet = doc.getSheetByName(sheetName);
-  if (!sheet) return -1;
-  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-  return headers.findIndex(h => h.toString().toLowerCase().includes(colNamePartial.toLowerCase()));
-}
-
-function updateStock(sheet, epiId, qty, type, obra) {
-  const data = sheet.getDataRange().getValues();
-  const headers = data[0];
-
-  const idCol = headers.findIndex(h => h.toString().toLowerCase().includes('id_epi') || h.toString().toLowerCase() === 'id');
-  const qtyCol = headers.findIndex(h => h.toString().toLowerCase().includes('quantidade') || h.toString().toLowerCase().includes('qtd'));
-  const obraCol = headers.findIndex(h => h.toString().toLowerCase().includes('obra'));
-
-  if (idCol === -1 || qtyCol === -1) return;
+  const cleanEmail = email.trim().toLowerCase();
 
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
-    if (String(row[idCol]) === String(epiId)) {
-      if (obraCol !== -1 && obra) {
-        if (String(row[obraCol]) !== String(obra)) continue;
-      }
+    if (String(row[emailIdx]).trim().toLowerCase() === cleanEmail) {
+      const userObj = {};
+      headers.forEach((h, idx) => userObj[h] = row[idx]);
 
-      let currentQty = Number(row[qtyCol]);
-      let change = Number(qty);
+      // Ensure 'id' key exists for frontend
+      const idIdx = headers.indexOf('id');
+      if (idIdx !== -1) userObj.id = row[idIdx];
 
-      if (type === 'ENTREGA') {
-        currentQty -= change;
-      } else if (type === 'DEVOLUCAO') {
-        currentQty += change;
-      }
-
-      sheet.getRange(i + 1, qtyCol + 1).setValue(currentQty);
-      return;
+      return jsonResponse({ result: 'success', user: userObj });
     }
   }
+
+  return jsonResponse({ result: 'error', error: 'User not found' });
+}
+
+function requestAccess(data) {
+  const ADMIN_EMAIL = 'apptripoloni@gmail.com';
+  const subject = `[EPI App] Solicitação de Acesso: ${data.name}`;
+  const body = `
+      Nova Solicitação de Acesso:
+      Nome: ${data.name}
+      Email: ${data.email}
+      Cargo: ${data.position}
+      Motivo: ${data.reason || 'N/A'}
+      
+      Acesse a planilha 'Usuários' da obra correspondente para liberar o acesso.
+  `;
+
+  try {
+    MailApp.sendEmail(ADMIN_EMAIL, subject, body);
+    return jsonResponse({ 'result': 'success', 'message': 'Request sent' });
+  } catch (err) {
+    return jsonResponse({ 'result': 'error', 'error': 'Email error: ' + err.toString() });
+  }
+}
+
+// ==========================================
+// DATA SYNC LOGIC
+// ==========================================
+
+// ==========================================
+// DATA SYNC LOGIC
+// ==========================================
+
+function syncTransactions(doc, transactions) {
+  if (!transactions || transactions.length === 0) {
+    return jsonResponse({ 'result': 'success', 'processed': [] });
+  }
+
+  const stockSheet = doc.getSheetByName(SHEET_MAPPING.stock);
+  const movementSheet = doc.getSheetByName(SHEET_MAPPING.movements);
+
+  if (!stockSheet) return jsonResponse({ 'result': 'error', 'error': `Tab '${SHEET_MAPPING.stock}' not found` });
+  if (!movementSheet) return jsonResponse({ 'result': 'error', 'error': `Tab '${SHEET_MAPPING.movements}' not found` });
+
+  // 1. MAP HEADERS (STOCK)
+  const stockRange = stockSheet.getDataRange();
+  const stockValues = stockRange.getValues();
+  if (stockValues.length === 0) return jsonResponse({ 'result': 'error', 'error': 'Stock sheet is empty' });
+
+  const stockHeaders = stockValues[0].map(h => String(h).toLowerCase().trim());
+
+  // Flexible Matching
+  const idxId = stockHeaders.findIndex(h => h === 'id' || h === 'id_epi' || h === 'idepi' || h === 'id do epi' || h.includes('id epi'));
+  const idxQty = stockHeaders.findIndex(h => h === 'qtd' || h === 'quantidade' || h.includes('quant') || h === 'estoque atual' || h === 'estoque');
+  const idxObra = stockHeaders.findIndex(h => h.includes('obra') || h.includes('local'));
+
+  if (idxId === -1 || idxQty === -1) {
+    return jsonResponse({
+      'result': 'error',
+      'error': `CRITICAL: Columns missing in Stock. Need 'ID/ID_EPI' and 'Qtd/Estoque'. Found: [${stockValues[0].join(', ')}]`
+    });
+  }
+
+  // 2. PROCESS TRANSACTIONS
+  const processedIds = [];
+  const errors = [];
+  const stockUpdates = {};
+
+  // Get Next Launch ID
+  let nextIdNum = getNextId(movementSheet);
+
+  transactions.forEach(tx => {
+    try {
+      // Find Stock Row
+      let rowIndex = -1;
+      for (let i = 1; i < stockValues.length; i++) {
+        const row = stockValues[i];
+        if (String(row[idxId]) === String(tx.epiId)) {
+          if (idxObra !== -1 && tx.obra) {
+            if (String(row[idxObra]) === String(tx.obra)) {
+              rowIndex = i;
+              break;
+            }
+          } else {
+            rowIndex = i;
+            break;
+          }
+        }
+      }
+
+      // Update Stock Logic
+      if (rowIndex !== -1) {
+        let currentQty;
+        if (stockUpdates[rowIndex] !== undefined) {
+          currentQty = stockUpdates[rowIndex];
+        } else {
+          currentQty = Number(stockValues[rowIndex][idxQty]);
+        }
+
+        const change = Number(tx.quantity);
+        const typeNormal = tx.type.toUpperCase();
+
+        if (typeNormal === 'ENTREGA') {
+          currentQty -= change;
+        } else if (typeNormal === 'DEVOLUCAO' || typeNormal === 'COMPRA') {
+          currentQty += change;
+        } else if (typeNormal === 'AJUSTE') {
+          currentQty += change; // Can be negative
+        }
+        stockUpdates[rowIndex] = currentQty;
+      }
+
+      // Generate Data for Row
+      const newLaunchId = 'LNC' + String(nextIdNum).padStart(5, '0');
+      nextIdNum++;
+
+      let typeTitle;
+      if (tx.type.toLowerCase() === 'entrega') typeTitle = 'Entrega';
+      else if (tx.type.toLowerCase() === 'devolucao') typeTitle = 'Devolução';
+      else if (tx.type.toLowerCase() === 'compra') typeTitle = 'Compra';
+      else if (tx.type.toLowerCase() === 'ajuste') typeTitle = 'Ajuste';
+      else typeTitle = tx.type;
+
+      let origin, dest, condition;
+
+      if (typeTitle === 'Entrega') {
+        origin = 'Estoque Principal';
+        dest = `${tx.employeeId}`;
+        condition = 'N/A';
+      } else if (typeTitle === 'Devolução') {
+        origin = `${tx.employeeId}`;
+        dest = 'Estoque Principal';
+        condition = 'Usado';
+      } else if (typeTitle === 'Compra') {
+        origin = 'Fornecedor';
+        dest = 'Estoque Principal';
+        condition = 'Novo';
+      } else if (typeTitle === 'Ajuste') {
+        origin = 'Ajuste Manual';
+        dest = 'Estoque Principal';
+        condition = 'N/A';
+      } else {
+        origin = 'Desconhecido';
+        dest = 'Desconhecido';
+        condition = 'N/A';
+      }
+
+      // Append Row (Columns A-N)
+      const rowData = [
+        newLaunchId,
+        new Date(),
+        new Date(tx.timestamp),
+        tx.userId,
+        typeTitle,
+        tx.employeeId,
+        tx.epiId,
+        tx.quantity,
+        condition,
+        origin,
+        dest,
+        '', // Placeholder for signature
+        'Sincronizado',
+        ''
+      ];
+
+      movementSheet.appendRow(rowData);
+      const lastRow = movementSheet.getLastRow();
+
+      // HANDLE SIGNATURE (SAVE TO DRIVE + CELL IMAGE)
+      if (tx.signature && tx.signature.startsWith('data:image')) {
+        try {
+          const folder = getOrCreateFolder("EPI_Assinaturas");
+          const base64 = tx.signature.split(',')[1];
+          const blob = Utilities.newBlob(Utilities.base64Decode(base64), 'image/png', `sig_${newLaunchId}.png`);
+
+          // Save to Drive
+          const file = folder.createFile(blob);
+          file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); // Ensure visibility
+
+          // Create CellImage from Drive URL
+          // Note: setSourceUrl needs a publicly accessible URL or appropriate rights. 
+          // `getDownloadUrl()` often works best for internal scripts.
+          // Alternatively use =IMAGE(url, 4, 50, 100) if newCellImage fails.
+          // Using Builder is safer for embedding.
+
+          try {
+            // Method A: CellImage (Modern, Embedded)
+            const builder = SpreadsheetApp.newCellImage();
+            builder.setSourceUrl(file.getDownloadUrl());
+            builder.setAltTextDescription(`Assinatura ${newLaunchId}`);
+            const cellImage = builder.build();
+            movementSheet.getRange(lastRow, 12).setValue(cellImage);
+          } catch (e2) {
+            // Method B: Fallback to IMAGE Formula
+            // Thumbnail link is usually reliable for IMAGE() function.
+            const thumbUrl = file.getThumbnailLink().replace('sz=w220', 'sz=w1000'); // HACK: Get larger view
+            movementSheet.getRange(lastRow, 12).setFormula(`=IMAGE("${thumbUrl}")`);
+          }
+
+        } catch (imgErr) {
+          movementSheet.getRange(lastRow, 12).setValue('Erro Imagem: ' + imgErr.toString());
+        }
+      }
+
+      processedIds.push(tx.id);
+
+    } catch (e) {
+      errors.push({ id: tx.id, error: e.toString() });
+    }
+  });
+
+  // Apply Stock Updates
+  for (const [rIdx, qty] of Object.entries(stockUpdates)) {
+    stockSheet.getRange(parseInt(rIdx) + 1, idxQty + 1).setValue(qty);
+  }
+
+  return jsonResponse({ 'result': 'success', 'processed': processedIds, 'errors': errors });
+}
+
+// ==========================================
+// HELPERS
+// ==========================================
+
+function getOrCreateFolder(folderName) {
+  const folders = DriveApp.getFoldersByName(folderName);
+  if (folders.hasNext()) {
+    return folders.next();
+  } else {
+    return DriveApp.createFolder(folderName);
+  }
+}
+
+function getNextId(sheet) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return 1;
+
+  const lastIdVal = sheet.getRange(lastRow, 1).getValue();
+  const match = String(lastIdVal).match(/LNC(\d+)/);
+  if (match) {
+    return parseInt(match[1]) + 1;
+  }
+  return 1;
+}
+
+function getSheetDataAsJson(sheet, filterConfig = null) {
+  if (!sheet) return [];
+  const data = sheet.getDataRange().getValues();
+  if (data.length < 2) return [];
+
+  const headers = data[0];
+  const rows = data.slice(1);
+  let filterColIdx = -1;
+
+  if (filterConfig) {
+    filterColIdx = headers.findIndex(h => String(h).toLowerCase() === String(filterConfig.col).toLowerCase());
+  }
+
+  const result = [];
+  for (const row of rows) {
+    if (filterConfig && filterColIdx !== -1) {
+      if (String(row[filterColIdx]) !== String(filterConfig.val)) continue;
+    }
+
+    let obj = {};
+    headers.forEach((h, i) => {
+      obj[h] = row[i];
+    });
+    result.push(obj);
+  }
+  return result;
+}
+
+function jsonResponse(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+// ==========================================
+// SETUP & AUTH (Run once manually to fix permissions)
+// ==========================================
+function setupAuth() {
+  DriveApp.createFolder("Temp_Auth_Test");
+  console.log("Permissões de ESCRITA concedidas! Agora o App pode criar pastas.");
 }

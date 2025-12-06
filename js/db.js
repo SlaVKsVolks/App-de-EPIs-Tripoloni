@@ -16,6 +16,11 @@ export function initDB() {
             if (!db.objectStoreNames.contains('epis')) db.createObjectStore('epis', { keyPath: 'ID' });
             if (!db.objectStoreNames.contains('stock')) db.createObjectStore('stock', { keyPath: 'ID_EPI' });
 
+            // New Stores
+            if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'ID' }); // Assuming ID exists, else autoIncrement? Code.js returns ID.
+            if (!db.objectStoreNames.contains('movements')) db.createObjectStore('movements', { autoIncrement: true }); // History
+
+
             // Store for pending transactions
             if (!db.objectStoreNames.contains('pending_movements')) {
                 db.createObjectStore('pending_movements', { keyPath: 'id' });
